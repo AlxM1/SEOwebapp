@@ -82,12 +82,22 @@ export default function HomeScreen() {
             What you'll discover
           </Text>
           <View className="gap-3">
-            <CheckLine text="Their SEO strength & ranking factors" isDark={isDark} />
-            <CheckLine text="Website performance & speed" isDark={isDark} />
-            <CheckLine text="Technical SEO implementation" isDark={isDark} />
-            <CheckLine text="What's working for their site" isDark={isDark} />
-            <CheckLine text="Strategic recommendations based on their data" isDark={isDark} />
+            <CheckLine text="How your competitors rank on Google" isDark={isDark} />
+            <CheckLine text="Their technical SEO strengths & weaknesses" isDark={isDark} />
+            <CheckLine text="Page speed & performance benchmarks" isDark={isDark} />
+            <CheckLine text="What's working in their strategy" isDark={isDark} />
+            <CheckLine text="AI-powered competitive insights & strategies" isDark={isDark} />
           </View>
+        </View>
+
+        {/* AI Providers */}
+        <View className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg px-4 py-3`}>
+          <Text className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+            Powered by AI
+          </Text>
+          <Text className={`text-xs ${isDark ? 'text-gray-300' : 'text-gray-700'} leading-4`}>
+            Insights generated using Grok (xAI), Claude (Anthropic), and ChatGPT (OpenAI)
+          </Text>
         </View>
       </View>
     </ScrollView>

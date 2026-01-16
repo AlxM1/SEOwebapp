@@ -239,7 +239,7 @@ export default function ReportScreen() {
           onPress={() => Linking.openURL('https://your-website.com/contact')}
           className={`py-3 px-4 rounded-lg items-center ${isDark ? 'bg-white' : 'bg-black'}`}>
           <Text className={`font-semibold text-base ${isDark ? 'text-black' : 'text-white'}`}>
-            Get Competitive Strategy
+            Get Your Strategy
           </Text>
         </Pressable>
       </View>
