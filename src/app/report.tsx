@@ -1,7 +1,7 @@
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking, useColorScheme } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
+import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb, TrendingUp } from 'lucide-react-native';
 import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
 
 interface AnalysisResult {
@@ -63,7 +63,6 @@ export default function ReportScreen() {
 
         setResults(combined);
 
-        // Fetch AI recommendations in background
         setIsLoadingAI(true);
         const aiRecs = await generateAIRecommendations(url, {
           performance: combined.performance,
@@ -105,7 +104,7 @@ export default function ReportScreen() {
         </Text>
         <Pressable
           onPress={() => router.back()}
-          className={`mt-6 px-8 py-3 rounded-lg ${isDark ? 'bg-white' : 'bg-black'}`}>
+          className={`mt-6 px-8 py-3 rounded-xl ${isDark ? 'bg-white' : 'bg-black'}`}>
           <Text className={`font-semibold ${isDark ? 'text-black' : 'text-white'}`}>Try Again</Text>
         </Pressable>
       </View>
@@ -124,73 +123,93 @@ export default function ReportScreen() {
       className={`flex-1 ${isDark ? 'bg-gray-950' : 'bg-white'}`}
       showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View className={`px-6 py-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+      <View className={`px-6 py-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
         <Pressable onPress={() => router.back()} className="w-8 h-8 items-center justify-center mb-3">
-          <ArrowLeft size={20} color={isDark ? '#fff' : '#000'} strokeWidth={2.5} />
+          <ArrowLeft size={20} color={isDark ? '#fff' : '#000'} strokeWidth={2} />
         </Pressable>
-        <Text className={`text-sm font-medium truncate ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        <Text className={`text-xs font-semibold ${isDark ? 'text-gray-500' : 'text-gray-500'} tracking-wide mb-1`}>
+          ANALYSIS
+        </Text>
+        <Text className={`text-sm font-medium truncate ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
           {url}
         </Text>
       </View>
 
-      {/* Overall Score */}
-      <View className={`px-6 py-8 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-        <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          Competitor Strength Score
-        </Text>
-        <Text className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          {overallScore}
-        </Text>
-        <Text className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-          out of 100
-        </Text>
+      {/* Score Card */}
+      <View className="px-6 pt-8 pb-4">
+        <View className={`${isDark ? 'bg-gray-800' : 'bg-gray-50'} rounded-2xl p-8 border ${isDark ? 'border-gray-700' : 'border-gray-200'} items-center`}>
+          <Text className={`text-xs font-semibold ${isDark ? 'text-gray-500' : 'text-gray-500'} mb-3 tracking-wide`}>
+            COMPETITOR STRENGTH
+          </Text>
+          <Text className={`text-7xl font-bold ${isDark ? 'text-white' : 'text-gray-950'} mb-2`}>
+            {overallScore}
+          </Text>
+          <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            out of 100
+          </Text>
+        </View>
       </View>
 
-      {/* Scores */}
-      <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-        <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Their Performance Breakdown
-        </Text>
-        <View className="gap-3">
-          <ScoreRow label="SEO Strength" value={results.seo} isDark={isDark} />
-          <ScoreRow label="Technical Performance" value={results.performance} isDark={isDark} />
-          <ScoreRow label="Best Practices" value={results.bestPractices} isDark={isDark} />
-          <ScoreRow label="Accessibility Score" value={results.accessibility} isDark={isDark} />
+      {/* Metrics Grid */}
+      <View className="px-6 py-4 gap-3">
+        <View className="flex-row gap-3">
+          <MetricCard
+            label="SEO Strength"
+            value={results.seo}
+            isDark={isDark}
+          />
+          <MetricCard
+            label="Performance"
+            value={results.performance}
+            isDark={isDark}
+          />
+        </View>
+        <View className="flex-row gap-3">
+          <MetricCard
+            label="Best Practices"
+            value={results.bestPractices}
+            isDark={isDark}
+          />
+          <MetricCard
+            label="Accessibility"
+            value={results.accessibility}
+            isDark={isDark}
+          />
         </View>
       </View>
 
       {/* Strengths */}
-      <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-        <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Their Strengths
+      <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+        <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} mb-4 tracking-wide`}>
+          THEIR STRENGTHS
         </Text>
         <View className="gap-2">
           {results.mobileOptimized && (
-            <StrengthRow text="Optimized for mobile devices" isDark={isDark} />
+            <StrengthRow text="Mobile optimized" isDark={isDark} />
           )}
           {results.sslCertificate && (
-            <StrengthRow text="Has SSL security certificate" isDark={isDark} />
+            <StrengthRow text="SSL security active" isDark={isDark} />
           )}
           {results.performance && results.performance > 70 && (
-            <StrengthRow text="Fast page loading speed" isDark={isDark} />
+            <StrengthRow text="Fast loading speed" isDark={isDark} />
           )}
           {results.seo && results.seo > 70 && (
-            <StrengthRow text="Strong SEO implementation" isDark={isDark} />
+            <StrengthRow text="Strong SEO foundation" isDark={isDark} />
           )}
         </View>
       </View>
 
       {/* Weaknesses */}
       {results.issues && results.issues.length > 0 && (
-        <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
-          <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Their Weaknesses
+        <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+          <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} mb-4 tracking-wide`}>
+            THEIR WEAKNESSES
           </Text>
           <View className="gap-2">
-            {results.issues.slice(0, 5).map((issue, idx) => (
+            {results.issues.slice(0, 4).map((issue, idx) => (
               <View key={idx} className="flex-row gap-2">
                 <AlertCircle size={16} color="#FF4444" className="mt-0.5 flex-shrink-0" />
-                <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+                <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   {issue}
                 </Text>
               </View>
@@ -199,11 +218,11 @@ export default function ReportScreen() {
         </View>
       )}
 
-      {/* Competitive Advantage */}
-      <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+      {/* AI Insights */}
+      <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
         <View className="flex-row items-center justify-between mb-4">
-          <Text className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Your Advantage
+          <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} tracking-wide`}>
+            YOUR ADVANTAGE
           </Text>
           {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />}
         </View>
@@ -211,9 +230,9 @@ export default function ReportScreen() {
         {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
           <View className="gap-3">
             {results.aiRecommendations.map((rec, idx) => (
-              <View key={idx} className="flex-row gap-3">
-                <Lightbulb size={18} color="#FFB800" fill="#FFB800" className="mt-0.5 flex-shrink-0" />
-                <Text className={`flex-1 text-sm leading-5 ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+              <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                <Lightbulb size={16} color="#FFB800" fill="#FFB800" className="mt-1 flex-shrink-0" />
+                <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                   {rec}
                 </Text>
               </View>
@@ -222,22 +241,22 @@ export default function ReportScreen() {
         ) : isLoadingAI ? (
           <View className="items-center gap-2 py-4">
             <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />
-            <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Analyzing gaps...
+            <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              Generating insights...
             </Text>
           </View>
         ) : (
-          <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            Analysis complete
+          <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            Analysis ready
           </Text>
         )}
       </View>
 
       {/* CTA */}
-      <View className="px-6 py-6">
+      <View className="px-6 py-8">
         <Pressable
           onPress={() => Linking.openURL('https://your-website.com/contact')}
-          className={`py-3 px-4 rounded-lg items-center ${isDark ? 'bg-white' : 'bg-black'}`}>
+          className={`py-4 px-6 rounded-xl items-center border ${isDark ? 'bg-white border-white' : 'bg-black border-black'}`}>
           <Text className={`font-semibold text-base ${isDark ? 'text-black' : 'text-white'}`}>
             Get Your Strategy
           </Text>
@@ -247,13 +266,13 @@ export default function ReportScreen() {
   );
 }
 
-function ScoreRow({ label, value, isDark }: { label: string; value?: number; isDark: boolean }) {
+function MetricCard({ label, value, isDark }: { label: string; value?: number; isDark: boolean }) {
   return (
-    <View className="flex-row items-center justify-between">
-      <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+    <View className={`flex-1 ${isDark ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-4 border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+      <Text className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
         {label}
       </Text>
-      <Text className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-950'}`}>
         {value ?? '—'}
       </Text>
     </View>
@@ -262,9 +281,9 @@ function ScoreRow({ label, value, isDark }: { label: string; value?: number; isD
 
 function StrengthRow({ text, isDark }: { text: string; isDark: boolean }) {
   return (
-    <View className="flex-row gap-2">
-      <CheckCircle size={16} color="#4ECDC4" className="mt-0.5 flex-shrink-0" />
-      <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+    <View className="flex-row gap-2 items-center">
+      <CheckCircle size={16} color="#4ECDC4" className="flex-shrink-0" />
+      <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
         {text}
       </Text>
     </View>
