@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Pressable, TextInput, useColorScheme } from 'react-native';
+import { Text, View, ScrollView, Pressable, TextInput } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Search, ArrowRight, TrendingUp, Zap, Gauge, Target, Brain, Moon, Sun } from 'lucide-react-native';
@@ -32,35 +32,56 @@ export default function HomeScreen() {
       className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}
       showsVerticalScrollIndicator={false}>
       {/* Hero Section */}
-      <View className={`${isDark ? 'bg-gradient-to-b from-teal-950 to-gray-900' : 'bg-gray-50'} px-6 pt-16 pb-16`}>
-        <View className="flex-row items-start justify-between mb-8">
-          <View className="flex-1" />
-          <Pressable
-            onPress={toggleTheme}
-            className={`w-12 h-12 rounded-full flex-row items-center justify-center ${
-              isDark ? 'bg-gray-800 border border-teal-500/30' : 'bg-gray-200 border border-gray-300'
-            }`}>
-            {isDark ? (
+      {isDark ? (
+        <View className="bg-gradient-to-b from-teal-950 to-gray-900 px-6 pt-16 pb-16">
+          <View className="flex-row items-start justify-between mb-8">
+            <View className="flex-1" />
+            <Pressable
+              onPress={toggleTheme}
+              className="w-12 h-12 rounded-full flex-row items-center justify-center bg-gray-800 border border-teal-500/30">
               <Sun size={20} color="#FFD700" strokeWidth={2} />
-            ) : (
-              <Moon size={20} color="#4B5563" strokeWidth={2} />
-            )}
-          </Pressable>
-        </View>
+            </Pressable>
+          </View>
 
-        <Text className={`text-sm font-semibold ${isDark ? 'text-teal-400' : 'text-gray-500'} mb-3 tracking-wide`}>
-          COMPETITIVE INTELLIGENCE
-        </Text>
-        <Text className={`text-5xl font-bold leading-tight ${isDark ? 'text-white' : 'text-gray-950'} mb-4`}>
-          Analyze Your Competitors
-        </Text>
-        <Text className={`text-lg ${isDark ? 'text-teal-100/70' : 'text-gray-600'} leading-7`}>
-          See what's holding your site back from ranking on Google
-        </Text>
-      </View>
+          <Text className="text-sm font-semibold text-teal-400 mb-3 tracking-wide">
+            COMPETITIVE INTELLIGENCE
+          </Text>
+          <Text className="text-5xl font-bold leading-tight text-white mb-4">
+            Analyze Your Competitors
+          </Text>
+          <Text className="text-lg text-teal-100/70 leading-7">
+            See what's holding your site back from ranking on Google
+          </Text>
+        </View>
+      ) : (
+        <LinearGradient
+          colors={['#f0fdf4', '#e0f2fe']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 64 }}>
+          <View className="flex-row items-start justify-between mb-8">
+            <View className="flex-1" />
+            <Pressable
+              onPress={toggleTheme}
+              className="w-12 h-12 rounded-full flex-row items-center justify-center bg-white border border-gray-300">
+              <Moon size={20} color="#4B5563" strokeWidth={2} />
+            </Pressable>
+          </View>
+
+          <Text className="text-sm font-semibold text-gray-500 mb-3 tracking-wide">
+            COMPETITIVE INTELLIGENCE
+          </Text>
+          <Text className="text-5xl font-bold leading-tight text-gray-950 mb-4">
+            Analyze Your Competitors
+          </Text>
+          <Text className="text-lg text-gray-600 leading-7">
+            See what's holding your site back from ranking on Google
+          </Text>
+        </LinearGradient>
+      )}
 
       {/* Search Section */}
-      <View className={`px-6 -mt-8 mb-12`}>
+      <View className="px-6 -mt-8 mb-12">
         {/* Input */}
         <View className={`${isDark ? 'bg-gray-800/50 border border-teal-500/30' : 'bg-white border border-gray-200'} rounded-xl px-4 py-4 flex-row items-center gap-3 shadow-sm`}>
           <Search size={20} color={isDark ? '#14b8a6' : '#d1d5db'} strokeWidth={1.5} />
@@ -86,27 +107,43 @@ export default function HomeScreen() {
               colors={['#0d9488', '#14b8a6']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              className={`px-6 py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-                isLoading || !url.trim() ? 'opacity-50' : ''
-              }`}>
+              style={{
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                opacity: isLoading || !url.trim() ? 0.5 : 1,
+              }}>
               <Text className="font-semibold text-base text-white">
                 {isLoading ? 'Analyzing...' : 'Analyze'}
               </Text>
               {!isLoading && <ArrowRight size={18} color="#fff" strokeWidth={2} />}
             </LinearGradient>
           ) : (
-            <View className={`px-6 py-4 rounded-xl flex-row items-center justify-center gap-2 ${
-              isLoading || !url.trim() ? 'bg-gray-100' : 'bg-black'
-            }`}>
-              <Text className={`font-semibold text-base ${
-                isLoading || !url.trim() ? 'text-gray-400' : 'text-white'
-              }`}>
+            <LinearGradient
+              colors={['#e0f2fe', '#cffafe']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{
+                paddingHorizontal: 24,
+                paddingVertical: 16,
+                borderRadius: 12,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                opacity: isLoading || !url.trim() ? 0.5 : 1,
+              }}>
+              <Text className={`font-semibold text-base ${isLoading || !url.trim() ? 'text-gray-400' : 'text-gray-900'}`}>
                 {isLoading ? 'Analyzing...' : 'Analyze'}
               </Text>
               {!isLoading && (
-                <ArrowRight size={18} color={isLoading || !url.trim() ? '#9ca3af' : '#fff'} strokeWidth={2} />
+                <ArrowRight size={18} color={isLoading || !url.trim() ? '#9ca3af' : '#1f2937'} strokeWidth={2} />
               )}
-            </View>
+            </LinearGradient>
           )}
         </Pressable>
       </View>
@@ -152,8 +189,8 @@ export default function HomeScreen() {
 
       {/* AI Providers */}
       <View className="px-6 mb-8">
-        <View className={`${isDark ? 'bg-gray-800/50 border border-teal-500/20' : 'bg-gray-50 border border-gray-200'} rounded-xl p-4`}>
-          <Text className={`text-xs font-semibold ${isDark ? 'text-teal-400' : 'text-gray-500'} mb-2 tracking-wide`}>
+        <View className={`${isDark ? 'bg-gray-800/50 border border-teal-500/20' : 'bg-sky-50 border border-sky-200'} rounded-xl p-4`}>
+          <Text className={`text-xs font-semibold ${isDark ? 'text-teal-400' : 'text-sky-600'} mb-2 tracking-wide`}>
             POWERED BY
           </Text>
           <Text className={`text-sm ${isDark ? 'text-teal-100/80' : 'text-gray-700'} leading-5`}>
