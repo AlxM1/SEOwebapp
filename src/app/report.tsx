@@ -1,4 +1,4 @@
-import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
+import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking, useWindowDimensions } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
@@ -7,6 +7,7 @@ import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/s
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { saveAnalysis, trackEvent } from '@/lib/api-client';
+import { useResponsive } from '@/lib/responsive';
 
 interface AnalysisResult {
   performance?: number;
@@ -203,33 +204,8 @@ export default function ReportScreen() {
         )}
       </View>
 
-      {/* Metrics Grid */}
-      <View className="px-6 py-4 gap-3">
-        <View className="flex-row gap-3">
-          <MetricCard
-            label="SEO Strength"
-            value={results.seo}
-            isDark={isDark}
-          />
-          <MetricCard
-            label="Performance"
-            value={results.performance}
-            isDark={isDark}
-          />
-        </View>
-        <View className="flex-row gap-3">
-          <MetricCard
-            label="Best Practices"
-            value={results.bestPractices}
-            isDark={isDark}
-          />
-          <MetricCard
-            label="Accessibility"
-            value={results.accessibility}
-            isDark={isDark}
-          />
-        </View>
-      </View>
+      {/* Metrics Grid - Responsive */}
+      <MetricsGrid results={results} isDark={isDark} />
 
       {/* Strengths */}
       <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
@@ -403,6 +379,46 @@ function StrengthRow({ text, isDark }: { text: string; isDark: boolean }) {
       <Text className={`text-sm ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
         {text}
       </Text>
+    </View>
+  );
+}
+
+function MetricsGrid({ results, isDark }: { results: AnalysisResult; isDark: boolean }) {
+  const responsive = useResponsive();
+
+  // Determine number of columns based on screen size
+  const numColumns = responsive.isMobile ? 2 : responsive.isTablet ? 2 : 4;
+  const metrics = [
+    { label: 'SEO Strength', value: results.seo },
+    { label: 'Performance', value: results.performance },
+    { label: 'Best Practices', value: results.bestPractices },
+    { label: 'Accessibility', value: results.accessibility },
+  ];
+
+  return (
+    <View className="px-6 py-4">
+      {responsive.isMobile ? (
+        // Mobile: 2 columns
+        <>
+          <View className="flex-row gap-3 mb-3">
+            <MetricCard label={metrics[0].label} value={metrics[0].value} isDark={isDark} />
+            <MetricCard label={metrics[1].label} value={metrics[1].value} isDark={isDark} />
+          </View>
+          <View className="flex-row gap-3">
+            <MetricCard label={metrics[2].label} value={metrics[2].value} isDark={isDark} />
+            <MetricCard label={metrics[3].label} value={metrics[3].value} isDark={isDark} />
+          </View>
+        </>
+      ) : (
+        // Tablet & Desktop: 4 columns (or 2 for tablet)
+        <View style={{ flexDirection: responsive.isTablet ? 'row' : 'row', gap: 12, flexWrap: 'wrap' }}>
+          {metrics.map((metric, idx) => (
+            <View key={idx} style={{ flex: responsive.isTablet ? 0.48 : 0.23 }}>
+              <MetricCard label={metric.label} value={metric.value} isDark={isDark} />
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
