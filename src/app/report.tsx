@@ -237,25 +237,73 @@ export default function ReportScreen() {
         </View>
       )}
 
-      {/* AI Insights */}
+      {/* AI Insights - Advantages */}
       <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
         <View className="flex-row items-center justify-between mb-4">
           <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} tracking-wide`}>
-            YOUR ADVANTAGE
+            ADVANTAGE
           </Text>
           {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#14b8a6' : '#000'} />}
         </View>
 
         {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
           <View className="gap-3">
-            {results.aiRecommendations.map((rec, idx) => (
-              <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-teal-950/40 border border-teal-500/30' : 'bg-gray-50 border border-gray-200'}`}>
-                <Lightbulb size={16} color="#FFB800" fill="#FFB800" className="mt-1 flex-shrink-0" />
-                <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
-                  {rec}
-                </Text>
-              </View>
-            ))}
+            {results.aiRecommendations
+              .filter((rec) => rec.includes('Advantage'))
+              .map((rec, idx) => (
+                <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-teal-950/40 border border-teal-500/30' : 'bg-gray-50 border border-gray-200'}`}>
+                  <Lightbulb size={16} color="#FFB800" fill="#FFB800" className="mt-1 flex-shrink-0" />
+                  <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
+                    {rec}
+                  </Text>
+                </View>
+              ))}
+            {results.aiRecommendations.filter((rec) => rec.includes('Advantage')).length === 0 && !isLoadingAI && (
+              <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
+                No advantages identified yet
+              </Text>
+            )}
+          </View>
+        ) : isLoadingAI ? (
+          <View className="items-center gap-2 py-4">
+            <ActivityIndicator size="small" color={isDark ? '#14b8a6' : '#000'} />
+            <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
+              Generating insights...
+            </Text>
+          </View>
+        ) : (
+          <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
+            Analysis ready
+          </Text>
+        )}
+      </View>
+
+      {/* AI Insights - Opportunities Identified */}
+      <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} tracking-wide`}>
+            OPPORTUNITIES IDENTIFIED
+          </Text>
+          {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#14b8a6' : '#000'} />}
+        </View>
+
+        {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
+          <View className="gap-3">
+            {results.aiRecommendations
+              .filter((rec) => rec.includes('Opportunities Identified'))
+              .map((rec, idx) => (
+                <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-teal-950/40 border border-teal-500/30' : 'bg-gray-50 border border-gray-200'}`}>
+                  <Lightbulb size={16} color="#FFB800" fill="#FFB800" className="mt-1 flex-shrink-0" />
+                  <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
+                    {rec}
+                  </Text>
+                </View>
+              ))}
+            {results.aiRecommendations.filter((rec) => rec.includes('Opportunities Identified')).length === 0 && !isLoadingAI && (
+              <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
+                No opportunities identified yet
+              </Text>
+            )}
           </View>
         ) : isLoadingAI ? (
           <View className="items-center gap-2 py-4">
