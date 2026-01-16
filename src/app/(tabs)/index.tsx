@@ -40,7 +40,7 @@ export default function HomeScreen() {
           Analyze Your Competitors
         </Text>
         <Text className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-6 mb-8`}>
-          See how your competitors rank and what they're doing right
+          See what's holding your site back from ranking on Google
         </Text>
 
         {/* Search Bar */}
