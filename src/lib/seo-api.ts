@@ -33,6 +33,89 @@ export async function analyzePageSpeed(url: string) {
   }
 }
 
+// Generate AI Recommendations using Grok or OpenAI
+export async function generateAIRecommendations(
+  url: string,
+  scores: {
+    performance?: number;
+    seo?: number;
+    accessibility?: number;
+    bestPractices?: number;
+  },
+  issues?: string[]
+): Promise<string[]> {
+  try {
+    const apiKey = process.env.EXPO_PUBLIC_VIBECODE_GROK_API_KEY || process.env.EXPO_PUBLIC_VIBECODE_OPENAI_API_KEY;
+    const isGrok = !!process.env.EXPO_PUBLIC_VIBECODE_GROK_API_KEY;
+
+    if (!apiKey) {
+      return [];
+    }
+
+    const endpoint = isGrok ? 'https://api.x.ai/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
+    const model = isGrok ? 'grok-4-fast-non-reasoning' : 'gpt-5-nano';
+
+    const prompt = `You are an SEO expert. Analyze this website's metrics and provide 5 specific, actionable recommendations to improve its Google ranking.
+
+Website: ${url}
+Performance Score: ${scores.performance}/100
+SEO Score: ${scores.seo}/100
+Accessibility Score: ${scores.accessibility}/100
+Best Practices Score: ${scores.bestPractices}/100
+${issues && issues.length > 0 ? `Issues Found: ${issues.slice(0, 3).join(', ')}` : ''}
+
+Provide recommendations as a numbered list (1-5). Each recommendation should:
+- Be specific and actionable
+- Focus on improving Google ranking
+- Be achievable for small businesses
+- Include the expected impact (low/medium/high)
+
+Format each as: "Number. [Recommendation] - Impact: [low/medium/high]"`;
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful SEO expert. Provide practical, actionable recommendations.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        ...(isGrok ? { max_tokens: 1000, temperature: 1 } : { max_completion_tokens: 1000, temperature: 1 }),
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('AI API error:', response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content || '';
+
+    // Parse the response into individual recommendations
+    const recommendations = content
+      .split('\n')
+      .filter((line: string) => line.trim().match(/^\d+\./))
+      .map((line: string) => line.trim())
+      .slice(0, 5);
+
+    return recommendations.length > 0 ? recommendations : [];
+  } catch (error) {
+    console.error('AI Recommendation error:', error);
+    return [];
+  }
+}
+
 // Webpulls Free SEO Audit API
 export async function analyzeSEO(url: string) {
   try {

@@ -1,10 +1,10 @@
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertCircle, CheckCircle, TrendingUp, Zap } from 'lucide-react-native';
+import { ArrowLeft, AlertCircle, CheckCircle, TrendingUp, Zap, Lightbulb } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
-import { analyzePageSpeed, analyzeSEO } from '@/lib/seo-api';
+import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
 
 interface AnalysisResult {
   performance?: number;
@@ -19,6 +19,7 @@ interface AnalysisResult {
     lcp?: number;
     cls?: number;
   };
+  aiRecommendations?: string[];
 }
 
 export default function ReportScreen() {
@@ -26,6 +27,7 @@ export default function ReportScreen() {
   const router = useRouter();
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,6 +62,18 @@ export default function ReportScreen() {
         };
 
         setResults(combined);
+
+        // Fetch AI recommendations in background
+        setIsLoadingAI(true);
+        const aiRecs = await generateAIRecommendations(url, {
+          performance: combined.performance,
+          seo: combined.seo,
+          accessibility: combined.accessibility,
+          bestPractices: combined.bestPractices,
+        }, combined.issues);
+
+        setResults(prev => prev ? { ...prev, aiRecommendations: aiRecs } : null);
+        setIsLoadingAI(false);
       } catch (err) {
         console.error('Analysis error:', err);
         setError('Failed to analyze the website');
@@ -207,17 +221,35 @@ export default function ReportScreen() {
         </Animated.View>
       )}
 
-      {/* AI Insights Placeholder */}
+      {/* AI Recommendations */}
       <Animated.View entering={FadeInUp.delay(500)} className="px-6 py-4">
-        <View className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-          <View className="flex-row gap-2 items-center mb-3">
-            <Zap size={20} color="#0066FF" fill="#0066FF" />
-            <Text className="text-blue-900 font-bold">AI Recommendations (Coming Soon)</Text>
-          </View>
-          <Text className="text-blue-800 text-sm leading-5">
-            Connect your OpenAI API key to get personalized AI-powered recommendations to improve your SEO ranking.
-          </Text>
+        <View className="flex-row items-center justify-between mb-4">
+          <Text className="text-gray-900 font-bold text-lg">AI Recommendations</Text>
+          {isLoadingAI && <ActivityIndicator size="small" color="#0066FF" />}
         </View>
+
+        {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
+          <View className="bg-blue-50 rounded-2xl p-4 gap-3 border border-blue-200">
+            {results.aiRecommendations.map((rec, idx) => (
+              <View key={idx} className="flex-row gap-3">
+                <Lightbulb size={20} color="#0066FF" fill="#0066FF" className="mt-1" />
+                <Text className="flex-1 text-gray-800 text-sm font-medium leading-5">{rec}</Text>
+              </View>
+            ))}
+          </View>
+        ) : isLoadingAI ? (
+          <View className="bg-blue-50 rounded-2xl p-6 border border-blue-200 items-center gap-2">
+            <ActivityIndicator size="small" color="#0066FF" />
+            <Text className="text-blue-700 text-sm font-medium">Generating personalized recommendations...</Text>
+          </View>
+        ) : (
+          <View className="bg-blue-50 rounded-2xl p-4 gap-2 border border-blue-200">
+            <Text className="text-blue-900 font-semibold text-sm">AI Insights Generated</Text>
+            <Text className="text-blue-800 text-xs leading-5">
+              AI couldn't generate specific recommendations. Use the metrics above to improve your SEO.
+            </Text>
+          </View>
+        )}
       </Animated.View>
 
       {/* CTA Button */}
@@ -262,3 +294,4 @@ function InsightRow({
     </View>
   );
 }
+

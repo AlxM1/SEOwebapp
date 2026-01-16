@@ -11,6 +11,7 @@ A beautiful, free mobile app that analyzes websites for SEO performance, speed, 
 - **Mobile Optimization**: Check mobile-friendliness and responsive design
 - **Security Check**: Verify SSL/HTTPS implementation
 - **Accessibility Audit**: Check accessibility standards compliance
+- **AI-Powered Recommendations**: Get 5 personalized, actionable SEO improvement tips powered by Grok or OpenAI
 
 ### User Experience
 - **Beautiful Hero Animation**: Eye-catching intro with "1 click away" messaging
@@ -54,6 +55,19 @@ A beautiful, free mobile app that analyzes websites for SEO performance, speed, 
   - Meta tags, headings, links analysis
   - Common SEO issues
 
+### 3. AI Recommendation Engine (Grok or OpenAI)
+- **API Support**: Grok 4 Fast (xAI) or GPT-5 Nano (OpenAI)
+- **What it provides**:
+  - 5 personalized SEO improvement recommendations
+  - Impact levels (low/medium/high)
+  - Actionable, specific guidance
+  - Based on actual site metrics and issues
+- **How it works**:
+  - App collects all metrics from PageSpeed + Webpulls
+  - Sends to AI with prompt for SEO expert analysis
+  - Parses AI response and displays numbered recommendations
+  - Real-time generation while user views report
+
 ## Project Structure
 
 ```
@@ -74,15 +88,15 @@ src/
 │   └── seo-api.ts          # API integration functions
 ```
 
-## Next Steps: AI Integration
+## Next Steps: Customize Your Website Link
 
-To add **AI-powered personalized recommendations**:
+The CTA button currently points to `https://your-website.com/contact`. To update it with your real website:
 
-1. Go to the **API tab** in Vibecode
-2. Set up **OpenAI** or **Claude API** integration
-3. I'll integrate the AI to generate custom improvement tips based on the analysis
+1. Open `src/app/report.tsx`
+2. Find the line: `onPress={() => Linking.openURL('https://your-website.com/contact')}`
+3. Replace with your actual website URL
 
-This will make your app truly unique with personalized insights for each website analyzed.
+This is your lead magnet for your SEO and AI integration services business!
 
 ## Recent Updates
 
@@ -94,7 +108,10 @@ This will make your app truly unique with personalized insights for each website
 - ✅ Comprehensive report screen with metrics
 - ✅ CTA button for lead generation
 - ✅ Smooth animations and transitions
-- ⏳ AI recommendations (coming with API key setup)
+- ✅ AI-powered recommendations (Grok or OpenAI)
+  - Personalized SEO improvement suggestions
+  - Real-time AI generation on report screen
+  - 5 actionable, prioritized recommendations
 
 ## Design Inspiration
 
