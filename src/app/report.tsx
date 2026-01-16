@@ -1,7 +1,8 @@
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking, useColorScheme } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb, TrendingUp } from 'lucide-react-native';
+import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
 
 interface AnalysisResult {
@@ -86,9 +87,9 @@ export default function ReportScreen() {
 
   if (isLoading) {
     return (
-      <View className={`flex-1 ${isDark ? 'bg-gray-950' : 'bg-white'} justify-center items-center`}>
-        <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
-        <Text className={`mt-4 font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+      <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'} justify-center items-center`}>
+        <ActivityIndicator size="large" color={isDark ? '#14b8a6' : '#000'} />
+        <Text className={`mt-4 font-medium ${isDark ? 'text-teal-100/70' : 'text-gray-600'}`}>
           Analyzing competitor...
         </Text>
       </View>
@@ -97,15 +98,15 @@ export default function ReportScreen() {
 
   if (error || !results) {
     return (
-      <View className={`flex-1 ${isDark ? 'bg-gray-950' : 'bg-white'} px-6 justify-center items-center`}>
+      <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'} px-6 justify-center items-center`}>
         <AlertCircle size={48} color="#FF4444" strokeWidth={1.5} />
         <Text className={`text-lg font-bold mt-4 text-center ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {error || 'Analysis failed'}
         </Text>
         <Pressable
           onPress={() => router.back()}
-          className={`mt-6 px-8 py-3 rounded-xl ${isDark ? 'bg-white' : 'bg-black'}`}>
-          <Text className={`font-semibold ${isDark ? 'text-black' : 'text-white'}`}>Try Again</Text>
+          className={`mt-6 px-8 py-3 rounded-xl ${isDark ? 'bg-teal-600' : 'bg-black'}`}>
+          <Text className="font-semibold text-white">Try Again</Text>
         </Pressable>
       </View>
     );
@@ -120,34 +121,52 @@ export default function ReportScreen() {
 
   return (
     <ScrollView
-      className={`flex-1 ${isDark ? 'bg-gray-950' : 'bg-white'}`}
+      className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}
       showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View className={`px-6 py-4 border-b ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+      <View className={`px-6 py-4 border-b ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
         <Pressable onPress={() => router.back()} className="w-8 h-8 items-center justify-center mb-3">
-          <ArrowLeft size={20} color={isDark ? '#fff' : '#000'} strokeWidth={2} />
+          <ArrowLeft size={20} color={isDark ? '#14b8a6' : '#000'} strokeWidth={2} />
         </Pressable>
-        <Text className={`text-xs font-semibold ${isDark ? 'text-gray-500' : 'text-gray-500'} tracking-wide mb-1`}>
+        <Text className={`text-xs font-semibold ${isDark ? 'text-teal-400' : 'text-gray-500'} tracking-wide mb-1`}>
           ANALYSIS
         </Text>
-        <Text className={`text-sm font-medium truncate ${isDark ? 'text-gray-400' : 'text-gray-700'}`}>
+        <Text className={`text-sm font-medium truncate ${isDark ? 'text-teal-100/70' : 'text-gray-700'}`}>
           {url}
         </Text>
       </View>
 
       {/* Score Card */}
       <View className="px-6 pt-8 pb-4">
-        <View className={`${isDark ? 'bg-gray-800' : 'bg-gray-50'} rounded-2xl p-8 border ${isDark ? 'border-gray-700' : 'border-gray-200'} items-center`}>
-          <Text className={`text-xs font-semibold ${isDark ? 'text-gray-500' : 'text-gray-500'} mb-3 tracking-wide`}>
-            COMPETITOR STRENGTH
-          </Text>
-          <Text className={`text-7xl font-bold ${isDark ? 'text-white' : 'text-gray-950'} mb-2`}>
-            {overallScore}
-          </Text>
-          <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            out of 100
-          </Text>
-        </View>
+        {isDark ? (
+          <LinearGradient
+            colors={['#134e4a', '#0f766e']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="rounded-2xl p-8 items-center">
+            <Text className="text-xs font-semibold text-teal-200 mb-3 tracking-wide">
+              COMPETITOR STRENGTH
+            </Text>
+            <Text className="text-7xl font-bold text-white mb-2">
+              {overallScore}
+            </Text>
+            <Text className="text-sm text-teal-100/60">
+              out of 100
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View className="bg-gray-50 rounded-2xl p-8 border border-gray-200 items-center">
+            <Text className="text-xs font-semibold text-gray-500 mb-3 tracking-wide">
+              COMPETITOR STRENGTH
+            </Text>
+            <Text className="text-7xl font-bold text-gray-950 mb-2">
+              {overallScore}
+            </Text>
+            <Text className="text-sm text-gray-600">
+              out of 100
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Metrics Grid */}
@@ -179,8 +198,8 @@ export default function ReportScreen() {
       </View>
 
       {/* Strengths */}
-      <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-        <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} mb-4 tracking-wide`}>
+      <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
+        <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} mb-4 tracking-wide`}>
           THEIR STRENGTHS
         </Text>
         <View className="gap-2">
@@ -201,15 +220,15 @@ export default function ReportScreen() {
 
       {/* Weaknesses */}
       {results.issues && results.issues.length > 0 && (
-        <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
-          <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} mb-4 tracking-wide`}>
+        <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
+          <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} mb-4 tracking-wide`}>
             THEIR WEAKNESSES
           </Text>
           <View className="gap-2">
             {results.issues.slice(0, 4).map((issue, idx) => (
               <View key={idx} className="flex-row gap-2">
                 <AlertCircle size={16} color="#FF4444" className="mt-0.5 flex-shrink-0" />
-                <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <Text className={`flex-1 text-sm ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
                   {issue}
                 </Text>
               </View>
@@ -219,20 +238,20 @@ export default function ReportScreen() {
       )}
 
       {/* AI Insights */}
-      <View className={`px-6 py-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-100'}`}>
+      <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
         <View className="flex-row items-center justify-between mb-4">
-          <Text className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-900'} tracking-wide`}>
+          <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} tracking-wide`}>
             YOUR ADVANTAGE
           </Text>
-          {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />}
+          {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#14b8a6' : '#000'} />}
         </View>
 
         {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
           <View className="gap-3">
             {results.aiRecommendations.map((rec, idx) => (
-              <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-gray-800' : 'bg-gray-50'} border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+              <View key={idx} className={`flex-row gap-3 p-3 rounded-xl ${isDark ? 'bg-teal-950/40 border border-teal-500/30' : 'bg-gray-50 border border-gray-200'}`}>
                 <Lightbulb size={16} color="#FFB800" fill="#FFB800" className="mt-1 flex-shrink-0" />
-                <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
                   {rec}
                 </Text>
               </View>
@@ -240,13 +259,13 @@ export default function ReportScreen() {
           </View>
         ) : isLoadingAI ? (
           <View className="items-center gap-2 py-4">
-            <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />
-            <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <ActivityIndicator size="small" color={isDark ? '#14b8a6' : '#000'} />
+            <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
               Generating insights...
             </Text>
           </View>
         ) : (
-          <Text className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <Text className={`text-xs ${isDark ? 'text-teal-100/60' : 'text-gray-600'}`}>
             Analysis ready
           </Text>
         )}
@@ -254,13 +273,29 @@ export default function ReportScreen() {
 
       {/* CTA */}
       <View className="px-6 py-8">
-        <Pressable
-          onPress={() => Linking.openURL('https://your-website.com/contact')}
-          className={`py-4 px-6 rounded-xl items-center border ${isDark ? 'bg-white border-white' : 'bg-black border-black'}`}>
-          <Text className={`font-semibold text-base ${isDark ? 'text-black' : 'text-white'}`}>
-            Get Your Strategy
-          </Text>
-        </Pressable>
+        {isDark ? (
+          <LinearGradient
+            colors={['#0d9488', '#14b8a6']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="rounded-xl overflow-hidden">
+            <Pressable
+              onPress={() => Linking.openURL('https://your-website.com/contact')}
+              className="py-4 px-6 items-center">
+              <Text className="font-semibold text-base text-white">
+                Get Your Strategy
+              </Text>
+            </Pressable>
+          </LinearGradient>
+        ) : (
+          <Pressable
+            onPress={() => Linking.openURL('https://your-website.com/contact')}
+            className="py-4 px-6 rounded-xl items-center bg-black">
+            <Text className="font-semibold text-base text-white">
+              Get Your Strategy
+            </Text>
+          </Pressable>
+        )}
       </View>
     </ScrollView>
   );
@@ -268,8 +303,8 @@ export default function ReportScreen() {
 
 function MetricCard({ label, value, isDark }: { label: string; value?: number; isDark: boolean }) {
   return (
-    <View className={`flex-1 ${isDark ? 'bg-gray-800' : 'bg-gray-50'} rounded-xl p-4 border ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-      <Text className={`text-xs font-semibold ${isDark ? 'text-gray-400' : 'text-gray-600'} mb-2`}>
+    <View className={`flex-1 ${isDark ? 'bg-teal-950/30 border border-teal-500/30 rounded-xl' : 'bg-gray-50 border border-gray-200 rounded-xl'} p-4`}>
+      <Text className={`text-xs font-semibold ${isDark ? 'text-teal-400' : 'text-gray-600'} mb-2`}>
         {label}
       </Text>
       <Text className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-950'}`}>
@@ -282,8 +317,8 @@ function MetricCard({ label, value, isDark }: { label: string; value?: number; i
 function StrengthRow({ text, isDark }: { text: string; isDark: boolean }) {
   return (
     <View className="flex-row gap-2 items-center">
-      <CheckCircle size={16} color="#4ECDC4" className="flex-shrink-0" />
-      <Text className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+      <CheckCircle size={16} color={isDark ? '#14b8a6' : '#4ECDC4'} className="flex-shrink-0" />
+      <Text className={`text-sm ${isDark ? 'text-teal-100/80' : 'text-gray-700'}`}>
         {text}
       </Text>
     </View>
