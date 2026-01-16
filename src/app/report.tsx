@@ -90,7 +90,7 @@ export default function ReportScreen() {
       <View className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'} justify-center items-center`}>
         <ActivityIndicator size="large" color={isDark ? '#14b8a6' : '#000'} />
         <Text className={`mt-4 font-medium ${isDark ? 'text-teal-100/70' : 'text-gray-600'}`}>
-          Analyzing competitor...
+          Analyzing website...
         </Text>
       </View>
     );
@@ -145,7 +145,7 @@ export default function ReportScreen() {
             end={{ x: 1, y: 1 }}
             className="rounded-2xl p-8 items-center">
             <Text className="text-xs font-semibold text-teal-200 mb-3 tracking-wide">
-              COMPETITOR STRENGTH
+              WEBSITE STRENGTH
             </Text>
             <Text className="text-7xl font-bold text-white mb-2">
               {overallScore}
@@ -157,7 +157,7 @@ export default function ReportScreen() {
         ) : (
           <View className="bg-gray-50 rounded-2xl p-8 border border-gray-200 items-center">
             <Text className="text-xs font-semibold text-gray-500 mb-3 tracking-wide">
-              COMPETITOR STRENGTH
+              WEBSITE STRENGTH
             </Text>
             <Text className="text-7xl font-bold text-gray-950 mb-2">
               {overallScore}
@@ -200,7 +200,7 @@ export default function ReportScreen() {
       {/* Strengths */}
       <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
         <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} mb-4 tracking-wide`}>
-          THEIR STRENGTHS
+          STRENGTHS
         </Text>
         <View className="gap-2">
           {results.mobileOptimized && (
@@ -222,7 +222,7 @@ export default function ReportScreen() {
       {results.issues && results.issues.length > 0 && (
         <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
           <Text className={`text-sm font-semibold ${isDark ? 'text-teal-300' : 'text-gray-900'} mb-4 tracking-wide`}>
-            THEIR WEAKNESSES
+            WEAKNESSES
           </Text>
           <View className="gap-2">
             {results.issues.slice(0, 4).map((issue, idx) => (
