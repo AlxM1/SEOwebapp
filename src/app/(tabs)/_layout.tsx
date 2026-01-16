@@ -6,7 +6,6 @@ import { Pressable } from 'react-native';
 import { useColorScheme } from '@/lib/useColorScheme';
 import { useClientOnlyValue } from '@/lib/useClientOnlyValue';
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
@@ -20,34 +19,15 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colorScheme === 'dark' ? 'white' : 'blue',
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
+        tabBarActiveTintColor: '#0066FF',
+        tabBarInactiveTintColor: colorScheme === 'dark' ? '#666' : '#999',
         headerShown: useClientOnlyValue(false, true),
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable className="mr-4 active:opacity-50">
-                <FontAwesome
-                  name="info-circle"
-                  size={25}
-                  color={colorScheme === 'dark' ? 'white' : 'black'}
-                />
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="code" color={color} />,
+          title: 'SEO Audit',
+          tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="search" color={color} />,
         }}
       />
     </Tabs>
