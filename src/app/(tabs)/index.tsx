@@ -29,7 +29,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-slate-100'}`}
+      className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-slate-50'}`}
       showsVerticalScrollIndicator={false}>
       {/* Hero Section */}
       {isDark ? (
@@ -55,7 +55,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <LinearGradient
-          colors={['#f8fafc', '#f0f4f8']}
+          colors={['#eff6ff', '#dbeafe']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 64 }}>
