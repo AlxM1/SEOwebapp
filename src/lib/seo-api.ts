@@ -185,7 +185,7 @@ function generateMockSEOData(url: string) {
       mobileOptimized: (hash % 3) !== 0,
       sslCertificate: true,
       score: ((hash % 40) + 60),
-      issues: generateMockIssues(),
+      issues: generateMockIssues(hash),
     };
   } catch {
     return {
@@ -197,12 +197,12 @@ function generateMockSEOData(url: string) {
       mobileOptimized: true,
       sslCertificate: true,
       score: 72,
-      issues: generateMockIssues(),
+      issues: generateMockIssues(0),
     };
   }
 }
 
-function generateMockIssues() {
+function generateMockIssues(seed: number) {
   const issues = [
     'Missing meta descriptions on some pages',
     'Slow page load time detected',
@@ -210,5 +210,11 @@ function generateMockIssues() {
     'Missing H1 tags on some pages',
     'Image alt text missing on several images',
   ];
-  return issues.sort(() => Math.random() - 0.5).slice(0, 3);
+  // Deterministically select issues based on seed
+  const startIndex = seed % issues.length;
+  return [
+    issues[startIndex],
+    issues[(startIndex + 1) % issues.length],
+    issues[(startIndex + 2) % issues.length],
+  ];
 }
