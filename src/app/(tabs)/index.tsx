@@ -29,7 +29,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView
-      className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-transparent'}`}
+      className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-slate-100'}`}
       showsVerticalScrollIndicator={false}>
       {/* Hero Section */}
       {isDark ? (
