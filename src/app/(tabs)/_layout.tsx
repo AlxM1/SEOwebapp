@@ -31,7 +31,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Detailed Analytics',
+          title: 'SEO Analytics',
           tabBarIcon: ({ color }: { color: string }) => <TabBarIcon name="bar-chart" color={color} />,
         }}
       />
