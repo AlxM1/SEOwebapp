@@ -1,7 +1,7 @@
 import { Text, View, ScrollView, Pressable, TextInput, useColorScheme } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Search, ArrowRight, TrendingUp } from 'lucide-react-native';
+import { Search, ArrowRight, TrendingUp, Zap, Gauge, Target, Brain } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function HomeScreen() {
@@ -103,26 +103,31 @@ export default function HomeScreen() {
         </Text>
         <View className="gap-4">
           <FeatureItem
+            icon={<TrendingUp size={20} color="#FF6B6B" strokeWidth={2} />}
             title="Ranking Factors"
             description="How competitors rank on Google"
             isDark={isDark}
           />
           <FeatureItem
+            icon={<Gauge size={20} color="#4ECDC4" strokeWidth={2} />}
             title="Technical Strength"
             description="SEO and performance metrics"
             isDark={isDark}
           />
           <FeatureItem
+            icon={<Zap size={20} color="#FFD700" strokeWidth={2} />}
             title="Speed & Core Web Vitals"
             description="Performance benchmarks"
             isDark={isDark}
           />
           <FeatureItem
+            icon={<Target size={20} color="#FF8C42" strokeWidth={2} />}
             title="Strategic Gaps"
             description="Opportunities to outrank them"
             isDark={isDark}
           />
           <FeatureItem
+            icon={<Brain size={20} color="#9D4EDD" strokeWidth={2} />}
             title="AI-Powered Insights"
             description="Actionable competitive strategies"
             isDark={isDark}
@@ -145,10 +150,12 @@ export default function HomeScreen() {
   );
 }
 
-function FeatureItem({ title, description, isDark }: { title: string; description: string; isDark: boolean }) {
+function FeatureItem({ icon, title, description, isDark }: { icon: React.ReactNode; title: string; description: string; isDark: boolean }) {
   return (
     <View className="flex-row items-start gap-3">
-      <View className={`w-2 h-2 rounded-full mt-3 flex-shrink-0 ${isDark ? 'bg-teal-400' : 'bg-gray-400'}`} />
+      <View className="mt-1 flex-shrink-0">
+        {icon}
+      </View>
       <View className="flex-1">
         <Text className={`font-semibold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {title}
@@ -160,3 +167,4 @@ function FeatureItem({ title, description, isDark }: { title: string; descriptio
     </View>
   );
 }
+
