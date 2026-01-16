@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { ThemeProvider as CustomThemeProvider, useTheme } from '@/lib/ThemeContext';
+import { AuthProvider } from '@/lib/AuthContext';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -35,15 +36,17 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <CustomThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <KeyboardProvider>
-            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-            <RootLayoutNav colorScheme={colorScheme} />
-          </KeyboardProvider>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </CustomThemeProvider>
+    <AuthProvider>
+      <CustomThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <KeyboardProvider>
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <RootLayoutNav colorScheme={colorScheme} />
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+      </CustomThemeProvider>
+    </AuthProvider>
   );
 }

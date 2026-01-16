@@ -12,16 +12,22 @@ A beautiful, free mobile app that analyzes websites for SEO performance, speed, 
 - **Security Check**: Verify SSL/HTTPS implementation
 - **Accessibility Audit**: Check accessibility standards compliance
 - **AI-Powered Recommendations**: Get 5 personalized, actionable SEO improvement tips powered by Grok or OpenAI
+- **User Accounts**: Register and login to save analysis history
+- **Analysis History**: View and manage all previous website analyses
+- **Analytics Dashboard**: Track your analysis activity and patterns
 
 ### User Experience
 - **Beautiful Hero Animation**: Eye-catching intro with "1 click away" messaging
 - **Smooth Animations**: Fluid transitions and micro-interactions powered by React Native Reanimated
 - **Clean Report Design**: Easy-to-read dashboard with visual metrics and insights
-- **Real-time Analysis**: Fast API integration with Google PageSpeed Insights and Webpulls
+- **Real-time Analysis**: Fast API integration with Google PageSpeed Insights
+- **Light/Dark Mode**: Toggle between themes for comfortable viewing
+- **Persistent Authentication**: Secure JWT-based authentication with token storage
 
 ### Lead Generation
-- **Free Model**: No login or email collection required
-- **CTA Button**: "Get a Free SEO Consultation" link on report screen (points to your website)
+- **Free Model**: Users can analyze without creating an account
+- **Account Optional**: Create account to save history
+- **CTA Button**: "We fix it for less than you think" link on report screen (points to your website)
 - **Natural Flow**: Users analyze their site, see results, then get interested in your services
 
 ## Tech Stack
@@ -73,7 +79,7 @@ A beautiful, free mobile app that analyzes websites for SEO performance, speed, 
 ```
 src/
 ├── app/
-│   ├── _layout.tsx          # Root navigation
+│   ├── _layout.tsx          # Root navigation with providers
 │   ├── (tabs)/
 │   │   ├── _layout.tsx      # Tab layout (single tab for SEO Audit)
 │   │   └── index.tsx        # Home screen with search bar
@@ -85,7 +91,22 @@ src/
 │   ├── cn.ts               # Class name utilities
 │   ├── useColorScheme.ts   # Theme hook
 │   ├── useClientOnlyValue.ts
-│   └── seo-api.ts          # API integration functions
+│   ├── seo-api.ts          # API integration functions
+│   ├── ThemeContext.tsx    # Light/dark mode management
+│   ├── AuthContext.tsx     # User authentication state
+│   └── api-client.ts       # Backend API client functions
+
+backend/
+├── server.js               # Express server setup
+├── db.js                   # PostgreSQL database setup
+├── middleware/
+│   └── auth.js            # JWT authentication middleware
+├── routes/
+│   ├── auth.js            # Registration & login endpoints
+│   ├── analysis.js        # Analysis history endpoints
+│   └── analytics.js       # Analytics tracking endpoints
+├── Dockerfile             # Docker configuration
+└── package.json
 ```
 
 ## Next Steps: Customize Your Website Link
@@ -98,20 +119,61 @@ The CTA button currently points to `https://your-website.com/contact`. To update
 
 This is your lead magnet for your SEO and AI integration services business!
 
+## Backend Setup
+
+The app now includes a full Node.js/Express backend with PostgreSQL database for:
+1. User authentication (registration & login)
+2. Analysis history storage
+3. Analytics tracking
+4. Secure API key management
+
+### Quick Start with Docker
+
+```bash
+docker-compose up -d
+```
+
+This starts:
+- PostgreSQL database on port 5432
+- Express API on port 5000
+
+### Manual Setup
+
+See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for detailed instructions on:
+- Installing PostgreSQL
+- Setting up environment variables
+- Database initialization
+- API endpoints documentation
+- Production deployment
+
+### Frontend Configuration
+
+Add to your `.env` file:
+```
+EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
+```
+
 ## Recent Updates
+
+### V2.0 - Full Backend & Authentication
+- ✅ Node.js/Express backend
+- ✅ PostgreSQL database with 3 tables (users, analysis_history, analytics_events)
+- ✅ User authentication (JWT-based)
+- ✅ Save/retrieve analysis history
+- ✅ Analytics event tracking
+- ✅ Docker & Docker Compose support
+- ✅ Frontend integration with AuthContext
+- ✅ Automatic analysis saving for authenticated users
 
 ### V1.0 - Launch
 - ✅ Beautiful home screen with hero animation
 - ✅ Search bar for URL input
 - ✅ Google PageSpeed Insights integration
-- ✅ Webpulls SEO audit API integration
 - ✅ Comprehensive report screen with metrics
 - ✅ CTA button for lead generation
 - ✅ Smooth animations and transitions
 - ✅ AI-powered recommendations (Grok or OpenAI)
-  - Personalized SEO improvement suggestions
-  - Real-time AI generation on report screen
-  - 5 actionable, prioritized recommendations
+- ✅ Light/dark mode toggle
 
 ## Design Inspiration
 

@@ -5,6 +5,8 @@ import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-nat
 import { LinearGradient } from 'expo-linear-gradient';
 import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
 import { useTheme } from '@/lib/ThemeContext';
+import { useAuth } from '@/lib/AuthContext';
+import { saveAnalysis, trackEvent } from '@/lib/api-client';
 
 interface AnalysisResult {
   performance?: number;
@@ -26,6 +28,7 @@ export default function ReportScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
   const router = useRouter();
   const { isDark } = useTheme();
+  const { isAuthenticated } = useAuth();
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
@@ -45,6 +48,9 @@ export default function ReportScreen() {
           analyzePageSpeed(url),
           analyzeSEO(url),
         ]);
+
+        // Track analysis event
+        await trackEvent('website_analyzed', { url });
 
         if (!pageSpeedResult.overall) {
           setError('Failed to analyze the website. Please try again.');
@@ -72,8 +78,36 @@ export default function ReportScreen() {
           bestPractices: combined.bestPractices,
         }, combined.issues);
 
-        setResults(prev => prev ? { ...prev, aiRecommendations: aiRecs } : null);
+        const finalResults = { ...combined, aiRecommendations: aiRecs };
+        setResults(finalResults);
         setIsLoadingAI(false);
+
+        // Save to backend if authenticated
+        if (isAuthenticated) {
+          try {
+            await saveAnalysis({
+              url,
+              performanceScore: combined.performance,
+              seoScore: combined.seo,
+              accessibilityScore: combined.accessibility,
+              bestPracticesScore: combined.bestPractices,
+              overallScore: Math.round((
+                (combined.performance || 0) +
+                (combined.seo || 0) +
+                (combined.accessibility || 0) +
+                (combined.bestPractices || 0)
+              ) / 4),
+              mobileOptimized: combined.mobileOptimized,
+              sslCertificate: combined.sslCertificate,
+              issues: combined.issues,
+              advantages: aiRecs.filter(r => r.includes('Advantage')),
+              opportunities: aiRecs.filter(r => r.includes('Opportunities Identified')),
+            });
+          } catch (saveError) {
+            console.error('Error saving analysis to backend:', saveError);
+            // Don't fail the whole analysis if saving fails
+          }
+        }
       } catch (err) {
         console.error('Analysis error:', err);
         setError('Failed to analyze the website');
