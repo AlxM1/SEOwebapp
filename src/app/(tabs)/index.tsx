@@ -47,7 +47,7 @@ export default function HomeScreen() {
             COMPETITIVE INTELLIGENCE
           </Text>
           <Text className="text-5xl font-bold leading-tight text-white mb-4">
-            Analyze Your Competitors
+            Analyze Any Website
           </Text>
           <Text className="text-lg text-teal-100/70 leading-7">
             See what's holding your site back from ranking on Google
@@ -72,7 +72,7 @@ export default function HomeScreen() {
             COMPETITIVE INTELLIGENCE
           </Text>
           <Text className="text-5xl font-bold leading-tight text-gray-950 mb-4">
-            Analyze Your Competitors
+            Analyze Any Website
           </Text>
           <Text className="text-lg text-gray-600 leading-7">
             See what's holding your site back from ranking on Google
