@@ -153,11 +153,80 @@ Add to your `.env` file:
 EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
 ```
 
+## Admin Panel
+
+### Access the Admin Dashboard
+
+Once the backend is running (via Docker Compose or manual setup):
+
+**Navigate to:** `http://localhost:5000/admin`
+
+### Admin Features
+
+1. **Dashboard Statistics**
+   - Total Users Count
+   - Total Analyses Performed
+   - Average Score Across All Analyses
+   - Top Analyzed Domains
+
+2. **User Management**
+   - View all registered users
+   - Promote users to admin status
+   - Delete users and their data
+
+3. **App Settings** - Fully Customizable
+   - **App Title**: Change the main app name
+   - **CTA Text**: Customize the call-to-action button text
+   - **CTA URL**: Update the destination link for the CTA button
+
+4. **Analytics**
+   - Track top analyzed domains
+   - View usage patterns
+   - Monitor user activity
+
+5. **Admin Logs**
+   - Audit trail of all admin actions
+   - Track who promoted/deleted users
+   - Review settings changes
+
+### First-Time Admin Setup
+
+By default, the system requires an admin account. You can create one by:
+
+1. Start your backend server (Docker or manual)
+2. Register a user via the mobile app or API
+3. Access database directly and update user role:
+   ```sql
+   UPDATE users SET role = 'admin' WHERE email = 'your-admin-email@example.com';
+   ```
+4. Login to admin panel with those credentials
+
+### Admin API Endpoints
+
+All protected with JWT authentication + admin role verification:
+- `GET /api/admin/stats` - Dashboard statistics
+- `GET /api/admin/users` - List all users
+- `DELETE /api/admin/users/:id` - Remove user
+- `POST /api/admin/users/:id/promote` - Promote to admin
+- `GET /api/admin/settings` - Retrieve app settings
+- `POST /api/admin/settings` - Save/update settings
+- `GET /api/admin/logs` - Admin action logs
+
 ## Recent Updates
+
+### V3.0 - Admin Panel & Full Customization
+- ✅ Complete admin dashboard with authentication
+- ✅ User management (promote admins, delete users)
+- ✅ Customizable app settings (title, CTA text, CTA URL)
+- ✅ Admin analytics dashboard (total users, analyses, average scores)
+- ✅ Admin action logging & audit trail
+- ✅ Role-based access control (user/admin roles)
+- ✅ Top domains analytics tracking
+- ✅ Responsive web interface accessible at `/admin`
 
 ### V2.0 - Full Backend & Authentication
 - ✅ Node.js/Express backend
-- ✅ PostgreSQL database with 3 tables (users, analysis_history, analytics_events)
+- ✅ PostgreSQL database with 5 tables (users, analysis_history, analytics_events, app_settings, admin_logs)
 - ✅ User authentication (JWT-based)
 - ✅ Save/retrieve analysis history
 - ✅ Analytics event tracking
