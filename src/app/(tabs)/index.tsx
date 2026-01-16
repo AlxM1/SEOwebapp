@@ -37,17 +37,17 @@ export default function HomeScreen() {
       <View className="px-6">
         {/* Title */}
         <Text className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-2`}>
-          Check Your SEO Score
+          Analyze Your Competitors
         </Text>
         <Text className={`text-base ${isDark ? 'text-gray-400' : 'text-gray-600'} leading-6 mb-8`}>
-          See what's holding your site back from ranking on Google
+          See how your competitors rank and what they're doing right
         </Text>
 
         {/* Search Bar */}
         <View className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg px-4 py-3 flex-row items-center gap-3 mb-6`}>
           <Search size={20} color={isDark ? '#666' : '#999'} strokeWidth={2} />
           <TextInput
-            placeholder="Enter your website"
+            placeholder="Enter competitor website"
             placeholderTextColor={isDark ? '#666' : '#999'}
             value={url}
             onChangeText={setUrl}
@@ -72,21 +72,21 @@ export default function HomeScreen() {
               ? isDark ? 'text-gray-400' : 'text-gray-600'
               : isDark ? 'text-black' : 'text-white'
           }`}>
-            {isLoading ? 'Analyzing...' : 'Check Now'}
+            {isLoading ? 'Analyzing...' : 'Analyze Now'}
           </Text>
         </Pressable>
 
-        {/* What We Check */}
+        {/* What You'll Get */}
         <View className="mb-8">
           <Text className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}>
-            What you'll see
+            What you'll discover
           </Text>
           <View className="gap-3">
-            <CheckLine text="Your overall SEO score" isDark={isDark} />
-            <CheckLine text="Page speed & performance" isDark={isDark} />
-            <CheckLine text="Mobile friendliness" isDark={isDark} />
-            <CheckLine text="Common issues to fix" isDark={isDark} />
-            <CheckLine text="AI tips to rank better" isDark={isDark} />
+            <CheckLine text="Their SEO strength & ranking factors" isDark={isDark} />
+            <CheckLine text="Website performance & speed" isDark={isDark} />
+            <CheckLine text="Technical SEO implementation" isDark={isDark} />
+            <CheckLine text="What's working for their site" isDark={isDark} />
+            <CheckLine text="Strategic recommendations based on their data" isDark={isDark} />
           </View>
         </View>
       </View>

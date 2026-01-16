@@ -90,7 +90,7 @@ export default function ReportScreen() {
       <View className={`flex-1 ${isDark ? 'bg-gray-950' : 'bg-white'} justify-center items-center`}>
         <ActivityIndicator size="large" color={isDark ? '#fff' : '#000'} />
         <Text className={`mt-4 font-medium ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          Analyzing your website...
+          Analyzing competitor...
         </Text>
       </View>
     );
@@ -136,7 +136,7 @@ export default function ReportScreen() {
       {/* Overall Score */}
       <View className={`px-6 py-8 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <Text className={`text-sm font-medium mb-2 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          Your SEO Score
+          Competitor Strength Score
         </Text>
         <Text className={`text-5xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
           {overallScore}
@@ -149,21 +149,42 @@ export default function ReportScreen() {
       {/* Scores */}
       <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          Scores
+          Their Performance Breakdown
         </Text>
         <View className="gap-3">
-          <ScoreRow label="Performance" value={results.performance} isDark={isDark} />
-          <ScoreRow label="SEO" value={results.seo} isDark={isDark} />
-          <ScoreRow label="Accessibility" value={results.accessibility} isDark={isDark} />
+          <ScoreRow label="SEO Strength" value={results.seo} isDark={isDark} />
+          <ScoreRow label="Technical Performance" value={results.performance} isDark={isDark} />
           <ScoreRow label="Best Practices" value={results.bestPractices} isDark={isDark} />
+          <ScoreRow label="Accessibility Score" value={results.accessibility} isDark={isDark} />
         </View>
       </View>
 
-      {/* Issues */}
+      {/* Strengths */}
+      <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+        <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          Their Strengths
+        </Text>
+        <View className="gap-2">
+          {results.mobileOptimized && (
+            <StrengthRow text="Optimized for mobile devices" isDark={isDark} />
+          )}
+          {results.sslCertificate && (
+            <StrengthRow text="Has SSL security certificate" isDark={isDark} />
+          )}
+          {results.performance && results.performance > 70 && (
+            <StrengthRow text="Fast page loading speed" isDark={isDark} />
+          )}
+          {results.seo && results.seo > 70 && (
+            <StrengthRow text="Strong SEO implementation" isDark={isDark} />
+          )}
+        </View>
+      </View>
+
+      {/* Weaknesses */}
       {results.issues && results.issues.length > 0 && (
         <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
           <Text className={`font-bold text-base mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            Issues Found
+            Their Weaknesses
           </Text>
           <View className="gap-2">
             {results.issues.slice(0, 5).map((issue, idx) => (
@@ -178,11 +199,11 @@ export default function ReportScreen() {
         </View>
       )}
 
-      {/* AI Recommendations */}
+      {/* Competitive Advantage */}
       <View className={`px-6 py-6 border-b ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
         <View className="flex-row items-center justify-between mb-4">
           <Text className={`font-bold text-base ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            AI Tips
+            Your Advantage
           </Text>
           {isLoadingAI && <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />}
         </View>
@@ -202,12 +223,12 @@ export default function ReportScreen() {
           <View className="items-center gap-2 py-4">
             <ActivityIndicator size="small" color={isDark ? '#fff' : '#000'} />
             <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-              Generating AI tips...
+              Analyzing gaps...
             </Text>
           </View>
         ) : (
           <Text className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            AI tips coming soon
+            Analysis complete
           </Text>
         )}
       </View>
@@ -218,7 +239,7 @@ export default function ReportScreen() {
           onPress={() => Linking.openURL('https://your-website.com/contact')}
           className={`py-3 px-4 rounded-lg items-center ${isDark ? 'bg-white' : 'bg-black'}`}>
           <Text className={`font-semibold text-base ${isDark ? 'text-black' : 'text-white'}`}>
-            Get Help
+            Get Competitive Strategy
           </Text>
         </Pressable>
       </View>
@@ -234,6 +255,17 @@ function ScoreRow({ label, value, isDark }: { label: string; value?: number; isD
       </Text>
       <Text className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
         {value ?? '—'}
+      </Text>
+    </View>
+  );
+}
+
+function StrengthRow({ text, isDark }: { text: string; isDark: boolean }) {
+  return (
+    <View className="flex-row gap-2">
+      <CheckCircle size={16} color="#4ECDC4" className="mt-0.5 flex-shrink-0" />
+      <Text className={`flex-1 text-sm ${isDark ? 'text-gray-300' : 'text-gray-800'}`}>
+        {text}
       </Text>
     </View>
   );

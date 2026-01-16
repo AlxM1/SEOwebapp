@@ -55,22 +55,22 @@ export async function generateAIRecommendations(
     const endpoint = isGrok ? 'https://api.x.ai/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions';
     const model = isGrok ? 'grok-4-fast-non-reasoning' : 'gpt-5-nano';
 
-    const prompt = `You are an SEO expert. Analyze this website's metrics and provide 5 specific, actionable recommendations to improve its Google ranking.
+    const prompt = `You are a competitive analysis expert. Analyze this competitor's website metrics and provide 5 specific strategies they're using that give them an advantage, plus gaps you can exploit.
 
-Website: ${url}
+Competitor Website: ${url}
 Performance Score: ${scores.performance}/100
-SEO Score: ${scores.seo}/100
+SEO Strength: ${scores.seo}/100
 Accessibility Score: ${scores.accessibility}/100
 Best Practices Score: ${scores.bestPractices}/100
-${issues && issues.length > 0 ? `Issues Found: ${issues.slice(0, 3).join(', ')}` : ''}
+${issues && issues.length > 0 ? `Technical Issues: ${issues.slice(0, 3).join(', ')}` : ''}
 
-Provide recommendations as a numbered list (1-5). Each recommendation should:
-- Be specific and actionable
-- Focus on improving Google ranking
-- Be achievable for small businesses
-- Include the expected impact (low/medium/high)
+Provide insights as a numbered list (1-5). Each insight should:
+- Identify what they're doing well OR where they're weak
+- Show how to compete against them or exploit their weakness
+- Be actionable and strategic
+- Focus on gaining competitive advantage
 
-Format each as: "Number. [Recommendation] - Impact: [low/medium/high]"`;
+Format each as: "Number. [Strategy/Gap] - How to compete: [specific action]"`;
 
     const response = await fetch(endpoint, {
       method: 'POST',
