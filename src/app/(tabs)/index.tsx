@@ -1,15 +1,15 @@
 import { Text, View, ScrollView, Pressable, TextInput, useColorScheme } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-import { Search, ArrowRight, TrendingUp, Zap, Gauge, Target, Brain } from 'lucide-react-native';
+import { Search, ArrowRight, TrendingUp, Zap, Gauge, Target, Brain, Moon, Sun } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTheme } from '@/lib/ThemeContext';
 
 export default function HomeScreen() {
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark, toggleTheme } = useTheme();
 
   const handleSearch = async () => {
     if (!url.trim()) return;
@@ -32,7 +32,22 @@ export default function HomeScreen() {
       className={`flex-1 ${isDark ? 'bg-gray-900' : 'bg-white'}`}
       showsVerticalScrollIndicator={false}>
       {/* Hero Section */}
-      <View className={`${isDark ? 'bg-gradient-to-b from-teal-950 to-gray-900' : 'bg-gray-50'} px-6 pt-20 pb-16`}>
+      <View className={`${isDark ? 'bg-gradient-to-b from-teal-950 to-gray-900' : 'bg-gray-50'} px-6 pt-16 pb-16`}>
+        <View className="flex-row items-start justify-between mb-8">
+          <View className="flex-1" />
+          <Pressable
+            onPress={toggleTheme}
+            className={`w-12 h-12 rounded-full flex-row items-center justify-center ${
+              isDark ? 'bg-gray-800 border border-teal-500/30' : 'bg-gray-200 border border-gray-300'
+            }`}>
+            {isDark ? (
+              <Sun size={20} color="#FFD700" strokeWidth={2} />
+            ) : (
+              <Moon size={20} color="#4B5563" strokeWidth={2} />
+            )}
+          </Pressable>
+        </View>
+
         <Text className={`text-sm font-semibold ${isDark ? 'text-teal-400' : 'text-gray-500'} mb-3 tracking-wide`}>
           COMPETITIVE INTELLIGENCE
         </Text>
@@ -45,7 +60,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Search Section */}
-      <View className={`px-6 -mt-8 mb-12 ${isDark ? '' : ''}`}>
+      <View className={`px-6 -mt-8 mb-12`}>
         {/* Input */}
         <View className={`${isDark ? 'bg-gray-800/50 border border-teal-500/30' : 'bg-white border border-gray-200'} rounded-xl px-4 py-4 flex-row items-center gap-3 shadow-sm`}>
           <Search size={20} color={isDark ? '#14b8a6' : '#d1d5db'} strokeWidth={1.5} />
@@ -167,4 +182,3 @@ function FeatureItem({ icon, title, description, isDark }: { icon: React.ReactNo
     </View>
   );
 }
-
