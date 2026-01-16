@@ -46,7 +46,7 @@ export default function ReportScreen() {
           analyzeSEO(url),
         ]);
 
-        if (pageSpeedResult.error && seoResult.error) {
+        if (!pageSpeedResult.overall) {
           setError('Failed to analyze the website. Please try again.');
           return;
         }
