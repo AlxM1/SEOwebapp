@@ -8,7 +8,7 @@ export async function analyzePageSpeed(url: string) {
 
     if (data.error) {
       console.warn('PageSpeed API error:', data.error.message);
-      return generateMockPageSpeedData();
+      return generateMockPageSpeedData(url);
     }
 
     const lighthouse = data.lighthouseResult;
@@ -30,25 +30,36 @@ export async function analyzePageSpeed(url: string) {
     };
   } catch (error) {
     console.warn('PageSpeed API error:', error);
-    return generateMockPageSpeedData();
+    return generateMockPageSpeedData(url);
   }
 }
 
-function generateMockPageSpeedData() {
+function generateMockPageSpeedData(url: string) {
+  const hash = simpleHash(url);
   return {
     overall: {
-      performance: Math.floor(Math.random() * 40) + 50,
-      seo: Math.floor(Math.random() * 30) + 70,
-      accessibility: Math.floor(Math.random() * 30) + 70,
-      bestPractices: Math.floor(Math.random() * 30) + 70,
+      performance: ((hash % 40) + 50),
+      seo: (((hash * 7) % 30) + 70),
+      accessibility: (((hash * 13) % 30) + 70),
+      bestPractices: (((hash * 19) % 30) + 70),
     },
     metrics: {
-      fcp: Math.floor(Math.random() * 2000) + 800,
-      lcp: Math.floor(Math.random() * 3000) + 1500,
-      cls: Math.round((Math.random() * 0.5) * 100) / 100,
-      ttfb: Math.floor(Math.random() * 1000) + 200,
+      fcp: ((hash % 2000) + 800),
+      lcp: (((hash * 3) % 3000) + 1500),
+      cls: Math.round((((hash % 50) / 100) * 100)) / 100,
+      ttfb: (((hash * 5) % 1000) + 200),
     }
   };
+}
+
+function simpleHash(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
 }
 
 // Generate AI Recommendations using Grok or OpenAI
@@ -146,18 +157,8 @@ export async function analyzeSEO(url: string) {
       });
 
       if (response.ok) {
-        // API responded, use real data
-        return {
-          title: domain,
-          description: `Information about ${domain}`,
-          h1: `${domain} analysis`,
-          images: Math.floor(Math.random() * 50) + 10,
-          links: Math.floor(Math.random() * 200) + 50,
-          mobileOptimized: Math.random() > 0.3,
-          sslCertificate: true,
-          score: Math.floor(Math.random() * 40) + 60,
-          issues: generateMockIssues(),
-        };
+        // API responded, use deterministic mock data
+        return generateMockSEOData(url);
       }
     } catch {
       // Fall through to mock data
@@ -174,15 +175,16 @@ export async function analyzeSEO(url: string) {
 function generateMockSEOData(url: string) {
   try {
     const domain = new URL(url).hostname;
+    const hash = simpleHash(url);
     return {
       title: domain,
       description: `Competitive analysis for ${domain}`,
       h1: `${domain} Overview`,
-      images: Math.floor(Math.random() * 50) + 10,
-      links: Math.floor(Math.random() * 200) + 50,
-      mobileOptimized: Math.random() > 0.3,
+      images: ((hash % 40) + 10),
+      links: (((hash * 3) % 150) + 50),
+      mobileOptimized: (hash % 3) !== 0,
       sslCertificate: true,
-      score: Math.floor(Math.random() * 40) + 60,
+      score: ((hash % 40) + 60),
       issues: generateMockIssues(),
     };
   } catch {
