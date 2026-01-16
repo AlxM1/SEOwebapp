@@ -47,7 +47,7 @@ export default function HomeScreen() {
         <View className={`${isDark ? 'bg-gray-800' : 'bg-gray-100'} rounded-lg px-4 py-3 flex-row items-center gap-3 mb-6`}>
           <Search size={20} color={isDark ? '#666' : '#999'} strokeWidth={2} />
           <TextInput
-            placeholder="Enter competitor website"
+            placeholder="Enter any website you want checked"
             placeholderTextColor={isDark ? '#666' : '#999'}
             value={url}
             onChangeText={setUrl}
