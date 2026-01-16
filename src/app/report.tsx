@@ -1,9 +1,7 @@
 import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, AlertCircle, CheckCircle, TrendingUp, Zap, Lightbulb } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
 
 interface AnalysisResult {
@@ -88,7 +86,7 @@ export default function ReportScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-white justify-center items-center">
-        <ActivityIndicator size="large" color="#0066FF" />
+        <ActivityIndicator size="large" color="#000" />
         <Text className="mt-4 text-gray-600 font-medium">Analyzing your website...</Text>
       </View>
     );
@@ -101,197 +99,106 @@ export default function ReportScreen() {
         <Text className="text-lg font-bold text-gray-900 mt-4 text-center">{error || 'Analysis failed'}</Text>
         <Pressable
           onPress={() => router.back()}
-          className="mt-6 bg-blue-600 px-8 py-3 rounded-full">
-          <Text className="text-white font-bold">Try Again</Text>
+          className="mt-6 bg-black px-8 py-3 rounded-lg">
+          <Text className="text-white font-semibold">Try Again</Text>
         </Pressable>
       </View>
     );
   }
 
+  const overallScore = Math.round((
+    ((results.performance || 0) +
+    (results.seo || 0) +
+    (results.accessibility || 0) +
+    (results.bestPractices || 0)) / 4
+  ));
+
   return (
-    <ScrollView className="flex-1 bg-gray-50" showsVerticalScrollIndicator={false}>
+    <ScrollView className="flex-1 bg-white" showsVerticalScrollIndicator={false}>
       {/* Header */}
-      <View className="bg-white px-6 py-4 border-b border-gray-200">
+      <View className="px-6 py-4 border-b border-gray-200">
         <Pressable onPress={() => router.back()} className="w-8 h-8 items-center justify-center mb-3">
-          <ArrowLeft size={24} color="#0066FF" strokeWidth={2.5} />
+          <ArrowLeft size={20} color="#000" strokeWidth={2.5} />
         </Pressable>
         <Text className="text-gray-600 text-sm font-medium truncate">{url}</Text>
       </View>
 
       {/* Overall Score */}
-      <Animated.View entering={FadeInDown.delay(100)} className="px-6 pt-6 pb-4">
-        <LinearGradient
-          colors={['#0066FF', '#0052CC']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          className="rounded-3xl p-8 items-center">
-          <Text className="text-white/70 font-semibold text-sm mb-2">OVERALL SEO SCORE</Text>
-          <Text className="text-white text-6xl font-bold">
-            {Math.round((
-              ((results.performance || 0) +
-              (results.seo || 0) +
-              (results.accessibility || 0) +
-              (results.bestPractices || 0)) / 4
-            ))}
-          </Text>
-          <Text className="text-white/70 font-medium text-sm mt-2">out of 100</Text>
-        </LinearGradient>
-      </Animated.View>
+      <View className="px-6 py-8 border-b border-gray-200">
+        <Text className="text-gray-600 text-sm font-medium mb-2">Your SEO Score</Text>
+        <Text className="text-5xl font-bold text-gray-900">{overallScore}</Text>
+        <Text className="text-gray-500 text-sm mt-1">out of 100</Text>
+      </View>
 
-      {/* Metrics Grid */}
-      <Animated.View entering={FadeInUp.delay(200)} className="px-6 py-4 gap-3">
-        <View className="flex-row gap-3">
-          <MetricCard
-            label="Performance"
-            value={results.performance}
-            color="#FF6B6B"
-          />
-          <MetricCard
-            label="SEO"
-            value={results.seo}
-            color="#4ECDC4"
-          />
+      {/* Scores */}
+      <View className="px-6 py-6 border-b border-gray-200">
+        <Text className="text-gray-900 font-bold text-base mb-4">Scores</Text>
+        <View className="gap-3">
+          <ScoreRow label="Performance" value={results.performance} />
+          <ScoreRow label="SEO" value={results.seo} />
+          <ScoreRow label="Accessibility" value={results.accessibility} />
+          <ScoreRow label="Best Practices" value={results.bestPractices} />
         </View>
-        <View className="flex-row gap-3">
-          <MetricCard
-            label="Accessibility"
-            value={results.accessibility}
-            color="#FFE66D"
-          />
-          <MetricCard
-            label="Best Practices"
-            value={results.bestPractices}
-            color="#95E1D3"
-          />
-        </View>
-      </Animated.View>
-
-      {/* Key Insights */}
-      <Animated.View entering={FadeInUp.delay(300)} className="px-6 py-4">
-        <Text className="text-gray-900 font-bold text-lg mb-4">Key Insights</Text>
-
-        <View className="bg-white rounded-2xl p-4 gap-3">
-          {results.mobileOptimized && (
-            <InsightRow
-              icon={<CheckCircle size={20} color="#4ECDC4" />}
-              title="Mobile Friendly"
-              description="Your site is optimized for mobile devices"
-            />
-          )}
-
-          {results.sslCertificate && (
-            <InsightRow
-              icon={<CheckCircle size={20} color="#4ECDC4" />}
-              title="SSL Secure"
-              description="Your site uses HTTPS security"
-            />
-          )}
-
-          {results.metrics?.fcp && (
-            <InsightRow
-              icon={<TrendingUp size={20} color="#FF6B6B" />}
-              title={`First Paint: ${results.metrics.fcp}s`}
-              description="Time until first content appears"
-            />
-          )}
-
-          {results.metrics?.lcp && (
-            <InsightRow
-              icon={<TrendingUp size={20} color="#FF6B6B" />}
-              title={`Largest Paint: ${results.metrics.lcp}s`}
-              description="Time for largest element to render"
-            />
-          )}
-        </View>
-      </Animated.View>
+      </View>
 
       {/* Issues */}
       {results.issues && results.issues.length > 0 && (
-        <Animated.View entering={FadeInUp.delay(400)} className="px-6 py-4">
-          <Text className="text-gray-900 font-bold text-lg mb-4">Issues Found</Text>
-
-          <View className="bg-red-50 rounded-2xl p-4 gap-3">
+        <View className="px-6 py-6 border-b border-gray-200">
+          <Text className="text-gray-900 font-bold text-base mb-4">Issues Found</Text>
+          <View className="gap-2">
             {results.issues.slice(0, 5).map((issue, idx) => (
-              <View key={idx} className="flex-row gap-3">
-                <AlertCircle size={20} color="#FF4444" className="mt-1" />
-                <Text className="flex-1 text-gray-800 text-sm font-medium">{issue}</Text>
+              <View key={idx} className="flex-row gap-2">
+                <AlertCircle size={16} color="#FF4444" className="mt-0.5 flex-shrink-0" />
+                <Text className="flex-1 text-gray-800 text-sm">{issue}</Text>
               </View>
             ))}
           </View>
-        </Animated.View>
+        </View>
       )}
 
       {/* AI Recommendations */}
-      <Animated.View entering={FadeInUp.delay(500)} className="px-6 py-4">
+      <View className="px-6 py-6 border-b border-gray-200">
         <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-gray-900 font-bold text-lg">AI Recommendations</Text>
-          {isLoadingAI && <ActivityIndicator size="small" color="#0066FF" />}
+          <Text className="text-gray-900 font-bold text-base">AI Tips</Text>
+          {isLoadingAI && <ActivityIndicator size="small" color="#000" />}
         </View>
 
         {results.aiRecommendations && results.aiRecommendations.length > 0 ? (
-          <View className="bg-blue-50 rounded-2xl p-4 gap-3 border border-blue-200">
+          <View className="gap-3">
             {results.aiRecommendations.map((rec, idx) => (
               <View key={idx} className="flex-row gap-3">
-                <Lightbulb size={20} color="#0066FF" fill="#0066FF" className="mt-1" />
-                <Text className="flex-1 text-gray-800 text-sm font-medium leading-5">{rec}</Text>
+                <Lightbulb size={18} color="#FFB800" fill="#FFB800" className="mt-0.5 flex-shrink-0" />
+                <Text className="flex-1 text-gray-800 text-sm leading-5">{rec}</Text>
               </View>
             ))}
           </View>
         ) : isLoadingAI ? (
-          <View className="bg-blue-50 rounded-2xl p-6 border border-blue-200 items-center gap-2">
-            <ActivityIndicator size="small" color="#0066FF" />
-            <Text className="text-blue-700 text-sm font-medium">Generating personalized recommendations...</Text>
+          <View className="items-center gap-2 py-4">
+            <ActivityIndicator size="small" color="#000" />
+            <Text className="text-gray-600 text-sm">Generating AI tips...</Text>
           </View>
         ) : (
-          <View className="bg-blue-50 rounded-2xl p-4 gap-2 border border-blue-200">
-            <Text className="text-blue-900 font-semibold text-sm">AI Insights Generated</Text>
-            <Text className="text-blue-800 text-xs leading-5">
-              AI couldn't generate specific recommendations. Use the metrics above to improve your SEO.
-            </Text>
-          </View>
+          <Text className="text-gray-600 text-sm">AI tips coming soon</Text>
         )}
-      </Animated.View>
+      </View>
 
-      {/* CTA Button */}
-      <Animated.View entering={FadeInUp.delay(600)} className="px-6 py-6">
+      {/* CTA */}
+      <View className="px-6 py-6">
         <Pressable
           onPress={() => Linking.openURL('https://your-website.com/contact')}
-          className="bg-gradient-to-r from-blue-600 to-blue-500 py-4 px-6 rounded-2xl flex-row items-center justify-center gap-2">
-          <Text className="text-white font-bold text-base">Get a Free SEO Consultation</Text>
+          className="bg-black py-3 px-4 rounded-lg items-center">
+          <Text className="text-white font-semibold text-base">Get Help</Text>
         </Pressable>
-      </Animated.View>
+      </View>
     </ScrollView>
   );
 }
 
-function MetricCard({ label, value, color }: { label: string; value?: number; color: string }) {
+function ScoreRow({ label, value }: { label: string; value?: number }) {
   return (
-    <View className="flex-1 bg-white rounded-2xl p-4 items-center">
-      <Text className="text-gray-600 text-xs font-semibold mb-2">{label}</Text>
-      <Text style={{ color }} className="text-4xl font-bold">
-        {value ?? '—'}
-      </Text>
+    <View className="flex-row items-center justify-between">
+      <Text className="text-gray-700 text-sm">{label}</Text>
+      <Text className="font-bold text-gray-900 text-sm">{value ?? '—'}</Text>
     </View>
   );
 }
-
-function InsightRow({
-  icon,
-  title,
-  description,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <View className="flex-row gap-3">
-      {icon}
-      <View className="flex-1">
-        <Text className="text-gray-900 font-semibold text-sm">{title}</Text>
-        <Text className="text-gray-600 text-xs mt-0.5">{description}</Text>
-      </View>
-    </View>
-  );
-}
-
