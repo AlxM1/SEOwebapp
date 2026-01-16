@@ -331,7 +331,7 @@ export default function ReportScreen() {
               onPress={() => Linking.openURL('https://your-website.com/contact')}
               className="py-4 px-6 items-center">
               <Text className="font-semibold text-base text-white">
-                Get Your Strategy
+                We fix it for less than you think
               </Text>
             </Pressable>
           </LinearGradient>
@@ -340,7 +340,7 @@ export default function ReportScreen() {
             onPress={() => Linking.openURL('https://your-website.com/contact')}
             className="py-4 px-6 rounded-xl items-center bg-black">
             <Text className="font-semibold text-base text-white">
-              Get Your Strategy
+              We fix it for less than you think
             </Text>
           </Pressable>
         )}
