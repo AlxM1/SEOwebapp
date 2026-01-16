@@ -137,14 +137,24 @@ This starts:
 - PostgreSQL database on port 5432
 - Express API on port 5000
 
-### Manual Setup
+### Deployment & Setup
 
-See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for detailed instructions on:
-- Installing PostgreSQL
-- Setting up environment variables
-- Database initialization
+**For Bare Metal Server Deployment:**
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete step-by-step instructions on:
+- Setting up a bare metal server (Ubuntu/Linux)
+- Installing all dependencies (Node.js, PostgreSQL, Nginx)
+- Configuring SSL certificates (Let's Encrypt)
+- Setting up systemd services for auto-start
+- Configuring Nginx reverse proxy
+- Database backups and monitoring
+- Troubleshooting common issues
+
+**For Docker Deployment:**
+See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for:
+- Docker & Docker Compose setup
+- Environment variable configuration
 - API endpoints documentation
-- Production deployment
+- Database initialization
 
 ### Frontend Configuration
 
