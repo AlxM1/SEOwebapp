@@ -1,9 +1,10 @@
-import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking, useColorScheme } from 'react-native';
+import { Text, View, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
+import { useTheme } from '@/lib/ThemeContext';
 
 interface AnalysisResult {
   performance?: number;
@@ -24,8 +25,7 @@ interface AnalysisResult {
 export default function ReportScreen() {
   const { url } = useLocalSearchParams<{ url: string }>();
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
+  const { isDark } = useTheme();
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
