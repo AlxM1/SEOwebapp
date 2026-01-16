@@ -55,7 +55,7 @@ export default function HomeScreen() {
         </View>
       ) : (
         <LinearGradient
-          colors={['#f0fdf4', '#e0f2fe']}
+          colors={['#f8fafc', '#f0f4f8']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={{ paddingHorizontal: 24, paddingTop: 64, paddingBottom: 64 }}>
