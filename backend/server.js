@@ -4,7 +4,8 @@ const path = require('path');
 require('dotenv').config();
 const { initializeDatabase } = require('./db');
 
-const __dirname = path.resolve();
+// Define __dirname for CommonJS
+const currentDir = path.dirname(require.main.filename);
 
 const authRoutes = require('./routes/auth');
 const analysisRoutes = require('./routes/analysis');
@@ -30,7 +31,7 @@ app.use('/api/admin', adminRoutes);
 
 // Admin dashboard route
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'backend/public/admin.html'));
+  res.sendFile(path.join(currentDir, 'public/admin.html'));
 });
 
 // Health check
