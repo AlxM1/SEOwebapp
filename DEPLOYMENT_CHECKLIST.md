@@ -105,7 +105,7 @@ npm install
 
 ### Test Backend
 ```bash
-curl http://localhost:5000/health
+curl http://localhost:3000/health
 # Should return: {"status":"ok"}
 ```
 

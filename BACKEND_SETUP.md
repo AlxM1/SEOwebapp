@@ -39,10 +39,10 @@ docker-compose up -d
 
 This will:
 - Start PostgreSQL database on port 5432
-- Start Express API on port 5000
+- Start Express API on port 3000
 - Initialize all database tables automatically
 
-Access the API at: `http://localhost:5000`
+Access the API at: `http://localhost:3000`
 
 ## Option 2: Manual Setup
 
@@ -73,7 +73,7 @@ psql -U postgres -c "CREATE DATABASE seo_analytics;"
 ### 4. Configure Environment
 Edit `backend/.env`:
 ```
-PORT=5000
+PORT=3000
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 DB_USER=postgres
 DB_PASSWORD=postgres

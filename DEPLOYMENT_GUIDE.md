@@ -177,7 +177,7 @@ node -e "require('./db').initializeDatabase();"
 ```bash
 cd /opt/seoapp/backend
 node server.js
-# You should see: "Server running on port 5000"
+# You should see: "Server running on port 3000"
 # Press Ctrl+C to stop
 ```
 
@@ -299,7 +299,7 @@ Paste this configuration:
 
 ```nginx
 upstream backend {
-    server 127.0.0.1:5000;
+    server 127.0.0.1:3000;
 }
 
 server {
@@ -587,8 +587,8 @@ htop  # Install with: sudo apt install htop
 ### Backend Won't Start
 
 ```bash
-# Check if port 5000 is in use
-sudo lsof -i :5000
+# Check if port 3000 is in use
+sudo lsof -i :3000
 
 # Kill process if stuck
 sudo kill -9 <PID>

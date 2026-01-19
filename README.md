@@ -135,7 +135,7 @@ docker-compose up -d
 
 This starts:
 - PostgreSQL database on port 5432
-- Express API on port 5000
+- Express API on port 3000
 
 ### Deployment & Setup
 
