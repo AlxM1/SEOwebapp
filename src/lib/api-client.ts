@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://analysis.seoh.ca/api';
 
 // Auth API calls
 export async function registerUser(email: string, password: string) {

@@ -145,7 +145,7 @@ NODE_ENV=production
 JWT_SECRET=your-super-secret-jwt-key-change-this-12345
 
 # CORS
-CORS_ORIGIN=https://yourdomain.com
+CORS_ORIGIN=https://analysis.seoh.ca
 
 # API Keys (optional)
 GROK_API_KEY=your-grok-api-key
@@ -437,7 +437,7 @@ sudo systemctl enable certbot.timer
 In `/opt/seoapp/.env`:
 
 ```env
-EXPO_PUBLIC_API_BASE_URL=https://yourdomain.com/api
+EXPO_PUBLIC_API_BASE_URL=https://analysis.seoh.ca/api
 ```
 
 ### 2. Build Mobile App for Production
@@ -674,7 +674,7 @@ ls -la /opt/seoapp/backend/public/admin.html
 sudo journalctl -u seoapp-backend.service -f
 
 # Try accessing health endpoint
-curl https://yourdomain.com/health
+curl https://analysis.seoh.ca/health
 ```
 
 ---

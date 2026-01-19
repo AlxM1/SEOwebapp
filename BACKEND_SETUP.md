@@ -203,7 +203,7 @@ Response:
 The frontend is automatically configured to use the backend. Set the API endpoint in your `.env` file:
 
 ```
-EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
+EXPO_PUBLIC_API_BASE_URL=https://analysis.seoh.ca/api
 ```
 
 ## Database Schema

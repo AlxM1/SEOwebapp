@@ -111,10 +111,10 @@ backend/
 
 ## Next Steps: Customize Your Website Link
 
-The CTA button currently points to `https://your-website.com/contact`. To update it with your real website:
+The CTA button points to `https://seoh.ca/contact`. To update it with a different URL:
 
 1. Open `src/app/report.tsx`
-2. Find the line: `onPress={() => Linking.openURL('https://your-website.com/contact')}`
+2. Find the line: `onPress={() => Linking.openURL('https://seoh.ca/contact')}`
 3. Replace with your actual website URL
 
 This is your lead magnet for your SEO and AI integration services business!
@@ -160,7 +160,7 @@ See [BACKEND_SETUP.md](./BACKEND_SETUP.md) for:
 
 Add to your `.env` file:
 ```
-EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
+EXPO_PUBLIC_API_BASE_URL=https://analysis.seoh.ca/api
 ```
 
 ## Admin Panel
@@ -169,7 +169,7 @@ EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
 
 Once the backend is running (via Docker Compose or manual setup):
 
-**Navigate to:** `http://localhost:5000/admin`
+**Navigate to:** `https://analysis.seoh.ca/admin`
 
 ### Admin Features
 

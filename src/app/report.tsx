@@ -338,7 +338,7 @@ export default function ReportScreen() {
             end={{ x: 1, y: 1 }}
             className="rounded-xl overflow-hidden">
             <Pressable
-              onPress={() => Linking.openURL('https://your-website.com/contact')}
+              onPress={() => Linking.openURL('https://seoh.ca/contact')}
               className="py-4 px-6 items-center">
               <Text className="font-semibold text-base text-white">
                 We fix it for less than you think
@@ -347,7 +347,7 @@ export default function ReportScreen() {
           </LinearGradient>
         ) : (
           <Pressable
-            onPress={() => Linking.openURL('https://your-website.com/contact')}
+            onPress={() => Linking.openURL('https://seoh.ca/contact')}
             className="py-4 px-6 rounded-xl items-center bg-black">
             <Text className="font-semibold text-base text-white">
               We fix it for less than you think

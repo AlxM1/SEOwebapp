@@ -55,7 +55,7 @@ nano .env
 cd /opt/seoapp
 nano .env
 # Update:
-# EXPO_PUBLIC_API_BASE_URL=https://yourdomain.com/api
+# EXPO_PUBLIC_API_BASE_URL=https://analysis.seoh.ca/api
 ```
 
 ### 3. Nginx Configuration (3 minutes)
@@ -111,12 +111,12 @@ curl http://localhost:5000/health
 
 ### Test via Domain
 ```bash
-curl https://yourdomain.com/health
-curl https://yourdomain.com/api/admin/stats  # Should show admin endpoint exists
+curl https://analysis.seoh.ca/health
+curl https://analysis.seoh.ca/api/admin/stats  # Should show admin endpoint exists
 ```
 
 ### Test Admin Panel
-- Open browser: `https://yourdomain.com/admin`
+- Open browser: `https://analysis.seoh.ca/admin`
 - Login with your first registered user (see DEPLOYMENT_GUIDE.md)
 
 ### View Logs
