@@ -43,7 +43,10 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log('[LOGIN DEBUG] Login attempt for email:', email);
+
     if (!email || !password) {
+      console.log('[LOGIN DEBUG] Missing email or password');
       return res.status(400).json({ error: 'Email and password required' });
     }
 
@@ -51,13 +54,23 @@ router.post('/login', async (req, res) => {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     const user = result.rows[0];
 
+    console.log('[LOGIN DEBUG] User found:', user ? 'YES' : 'NO');
+
     if (!user) {
+      console.log('[LOGIN DEBUG] User not found in database for email:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    console.log('[LOGIN DEBUG] User ID:', user.id, 'Role:', user.role);
+    console.log('[LOGIN DEBUG] Stored password hash exists:', !!user.password);
+    console.log('[LOGIN DEBUG] Stored password hash length:', user.password ? user.password.length : 0);
+
     // Compare password
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log('[LOGIN DEBUG] Password comparison result:', validPassword ? 'MATCH' : 'NO MATCH');
+
     if (!validPassword) {
+      console.log('[LOGIN DEBUG] Password mismatch for user:', email);
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
@@ -66,9 +79,10 @@ router.post('/login', async (req, res) => {
       expiresIn: '7d',
     });
 
+    console.log('[LOGIN DEBUG] Login successful for:', email);
     res.json({ token, user: { id: user.id, email: user.email } });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('[LOGIN DEBUG] Login error:', error);
     res.status(500).json({ error: 'Login failed' });
   }
 });
