@@ -93,3 +93,41 @@ BRAND_CTA_URL=https://youragency.com/contact
 
 ### Schema Validation + Featured Snippet Checker
 `POST /api/schema/validate` → `{ url }` → validates JSON-LD schemas, checks featured snippet eligibility
+
+## Billing (LemonSqueezy)
+
+The hosted API product uses LemonSqueezy for subscription billing.
+
+### Setup
+
+1. Create a LemonSqueezy store at lemonsqueezy.com
+2. Create 3 products (Starter $99, Pro $199, Agency $499)
+3. Copy variant IDs to your `.env`:
+   ```
+   LEMON_STORE_SLUG=your-store-slug
+   LEMON_WEBHOOK_SECRET=from-LemonSqueezy-webhook-settings
+   LEMON_VARIANT_STARTER=123456
+   LEMON_VARIANT_PRO=123457
+   LEMON_VARIANT_AGENCY=123458
+   ```
+4. Add webhook in LemonSqueezy dashboard:
+   - URL: `https://analysis.seoh.ca/api/webhooks/lemonsqueezy`
+   - Events: `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`, `subscription_resumed`
+
+### Subscription Flow
+
+1. Agency registers → auto-created with free tier
+2. Dashboard shows pricing cards with Upgrade buttons
+3. Click Upgrade → LemonSqueezy hosted checkout (pre-filled email + agency ID)
+4. Payment succeeds → webhook fires → tier upgraded automatically → API key limits updated
+5. Cancel → webhook fires → downgraded to free automatically
+
+### Webhook Events Handled
+
+| Event | Action |
+|-------|--------|
+| `subscription_created` | Upgrade agency to purchased tier |
+| `subscription_updated` | Sync tier if plan changed |
+| `subscription_resumed` | Re-activate after pause |
+| `subscription_cancelled` | Downgrade to free |
+| `subscription_expired` | Downgrade to free |

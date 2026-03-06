@@ -10,6 +10,8 @@ const currentDir = path.dirname(require.main.filename);
 const { apiKeyMiddleware } = require('./middleware/apiKey');
 const adminSaasRoutes = require('./routes/admin-saas');
 const accountRoutes = require('./routes/account');
+const webhookRoutes = require('./routes/webhooks');
+const billingRoutes = require('./routes/billing');
 
 const authRoutes = require('./routes/auth');
 const analysisRoutes = require('./routes/analysis');
@@ -32,6 +34,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+
+// Webhooks need raw body — register BEFORE express.json()
+app.use('/api/webhooks', webhookRoutes);
+
 app.use(express.json());
 app.use(express.static('public'));
 
@@ -59,6 +65,7 @@ app.use('/api/monitor', monitorRoutes);
 app.use('/api/schema', schemaRoutes);
 app.use('/api/admin-saas', adminSaasRoutes);
 app.use('/api/account', accountRoutes);
+app.use('/api/billing', billingRoutes);
 
 // Public API docs endpoint
 app.get('/api', (req, res) => {

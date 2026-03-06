@@ -1,6 +1,36 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+function PricingCard({ tier, price, analyses, features, currentTier, onUpgrade }: {
+  tier: string; price: string; analyses: string; features: string[];
+  currentTier: string; onUpgrade: () => void;
+}) {
+  const isCurrent = tier === currentTier;
+  const isDowngrade = ['free','starter','pro','agency'].indexOf(tier) < ['free','starter','pro','agency'].indexOf(currentTier);
+  
+  return (
+    <div className={`bg-[#111] border rounded-xl p-5 ${isCurrent ? 'border-teal-500' : 'border-[#1a1a1a]'}`}>
+      {isCurrent && <div className="text-xs text-teal-400 font-semibold uppercase mb-2">Current Plan</div>}
+      <div className="flex items-end gap-1 mb-1">
+        <span className="text-2xl font-bold">{price}</span>
+        {price !== '$0' && <span className="text-gray-400 text-sm mb-1">/mo</span>}
+      </div>
+      <div className="text-sm font-medium capitalize mb-1">{tier}</div>
+      <div className="text-xs text-gray-400 mb-4">{analyses} analyses/month</div>
+      <ul className="space-y-1 mb-4">
+        {features.map(f => <li key={f} className="text-xs text-gray-400">✓ {f}</li>)}
+      </ul>
+      {!isCurrent && !isDowngrade && (
+        <button onClick={onUpgrade}
+          className="w-full bg-teal-600 hover:bg-teal-700 rounded-lg py-2 text-sm font-medium transition-colors">
+          Upgrade
+        </button>
+      )}
+      {isDowngrade && <div className="text-xs text-gray-600 text-center">Contact us to downgrade</div>}
+    </div>
+  );
+}
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://analysis.seoh.ca/api';
 
 export default function Dashboard() {
@@ -52,6 +82,18 @@ export default function Dashboard() {
     navigator.clipboard.writeText(text);
     setCopied(id);
     setTimeout(() => setCopied(''), 2000);
+  };
+
+  const handleUpgrade = async (tier: string) => {
+    const r = await fetch(`${API_BASE}/billing/checkout/${tier}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await r.json();
+    if (data.checkoutUrl) {
+      window.open(data.checkoutUrl, '_blank');
+    } else {
+      alert(data.message || 'Contact alex@00raiser.com to upgrade');
+    }
   };
 
   if (!token) return (
@@ -184,7 +226,7 @@ export default function Dashboard() {
       </div>
 
       {/* Features */}
-      <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
+      <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6 mb-6">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Your Plan — {agency?.tier?.toUpperCase()}</h2>
         <div className="grid grid-cols-2 gap-2">
           {tierFeatures && Object.entries(tierFeatures).map(([feature, enabled]) => (
@@ -194,11 +236,24 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
-        {agency?.tier === 'free' && (
-          <div className="mt-4 p-3 bg-teal-950 border border-teal-800 rounded-lg">
-            <p className="text-teal-400 text-sm">Upgrade for more analyses and features — <a href="mailto:alex@00raiser.com" className="underline">contact us</a></p>
-          </div>
-        )}
+      </div>
+
+      {/* Pricing */}
+      <div className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-gray-400 mb-4">Plans</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {[
+            { tier: 'free', price: '$0', analyses: '50', features: ['SEO crawl', 'GEO score', 'Performance'] },
+            { tier: 'starter', price: '$99', analyses: '500', features: ['Everything in Free', 'PDF reports', 'Competitor compare'] },
+            { tier: 'pro', price: '$199', analyses: '2,000', features: ['Everything in Starter', 'Bulk analysis', 'Monitoring + alerts'] },
+            { tier: 'agency', price: '$499', analyses: '10,000', features: ['Everything in Pro', 'Site-wide crawler', 'Priority support'] },
+          ].map(p => (
+            <PricingCard key={p.tier} {...p} currentTier={agency?.tier || 'free'} onUpgrade={() => handleUpgrade(p.tier)} />
+          ))}
+        </div>
+        <p className="text-xs text-gray-600 mt-4 text-center">
+          Manage your subscription → <a href="#" onClick={async (e) => { e.preventDefault(); const r = await fetch(`${API_BASE}/billing/portal`, { headers: { Authorization: `Bearer ${token}` } }); const d = await r.json(); if (d.portalUrl) window.open(d.portalUrl, '_blank'); }} className="text-teal-400 hover:underline">Customer Portal</a>
+        </p>
       </div>
     </div>
   );
