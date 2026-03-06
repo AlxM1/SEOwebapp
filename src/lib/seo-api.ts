@@ -2,7 +2,7 @@
 export async function analyzePageSpeed(url: string) {
   try {
     const response = await fetch(
-      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=AIzaSyD4YMV8C6pZE0HS2WNP5bswZB0V_WVFWDQ`
+      `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${process.env.EXPO_PUBLIC_PAGESPEED_API_KEY || ''}`
     );
     const data = await response.json();
 
@@ -148,28 +148,36 @@ Format each as: "Number. [Advantage/Opportunities Identified] - [specific insigh
 // DNS Lookup and basic SEO analysis
 export async function analyzeSEO(url: string) {
   try {
-    const domain = new URL(url).hostname;
-
-    // Try to fetch from a CORS-friendly DNS lookup service
-    try {
-      const response = await fetch(`https://dns.google/resolve?name=${domain}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        // API responded, use deterministic mock data
-        return generateMockSEOData(url);
-      }
-    } catch {
-      // Fall through to mock data
+    const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://analysis.seoh.ca/api';
+    const response = await fetch(`${API_BASE}/crawl/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data;
     }
-
-    // Return mock data based on the domain
-    return generateMockSEOData(url);
-  } catch (error) {
-    console.error('SEO analysis error:', error);
-    return generateMockSEOData(url);
+  } catch (e) {
+    console.warn('Real crawl failed, using fallback:', e);
   }
+  // Fallback to mock only if backend unavailable
+  return generateMockSEOData(url);
+}
+
+export async function getGEOScore(url: string) {
+  try {
+    const API_BASE = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://analysis.seoh.ca/api';
+    const response = await fetch(`${API_BASE}/geo/score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    if (response.ok) return await response.json();
+  } catch (e) {
+    console.warn('GEO score failed:', e);
+  }
+  return null;
 }
 
 function generateMockSEOData(url: string) {

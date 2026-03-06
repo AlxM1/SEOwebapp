@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle, Lightbulb } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { analyzePageSpeed, analyzeSEO, generateAIRecommendations } from '@/lib/seo-api';
+import { analyzePageSpeed, analyzeSEO, getGEOScore, generateAIRecommendations } from '@/lib/seo-api';
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { saveAnalysis, trackEvent } from '@/lib/api-client';
@@ -31,6 +31,7 @@ export default function ReportScreen() {
   const { isDark } = useTheme();
   const { isAuthenticated } = useAuth();
   const [results, setResults] = useState<AnalysisResult | null>(null);
+  const [geoData, setGeoData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,10 +46,13 @@ export default function ReportScreen() {
     const fetchAnalysis = async () => {
       try {
         setIsLoading(true);
-        const [pageSpeedResult, seoResult] = await Promise.all([
+        const [pageSpeedResult, seoResult, geoResult] = await Promise.all([
           analyzePageSpeed(url),
           analyzeSEO(url),
+          getGEOScore(url),
         ]);
+
+        if (geoResult) setGeoData(geoResult);
 
         // Track analysis event
         await trackEvent('website_analyzed', { url });
@@ -206,6 +210,86 @@ export default function ReportScreen() {
 
       {/* Metrics Grid - Responsive */}
       <MetricsGrid results={results} isDark={isDark} />
+
+      {/* GEO Score Section */}
+      {geoData && (
+        <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
+          <Text className={`text-sm font-semibold ${isDark ? 'text-purple-300' : 'text-gray-900'} mb-4 tracking-wide`}>
+            GEO SCORE — AI SEARCH VISIBILITY
+          </Text>
+
+          {/* GEO Score + Grade */}
+          <View className="flex-row items-center gap-4 mb-4">
+            <View className={`rounded-xl p-4 items-center ${isDark ? 'bg-purple-950/40 border border-purple-500/30' : 'bg-purple-50 border border-purple-200'}`} style={{ minWidth: 80 }}>
+              <Text className={`text-4xl font-bold ${isDark ? 'text-purple-200' : 'text-purple-800'}`}>
+                {geoData.geoScore}
+              </Text>
+              <Text className={`text-xs ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>/ 100</Text>
+            </View>
+            <View className="flex-1">
+              <View className={`rounded-lg px-3 py-1 self-start mb-1 ${
+                geoData.grade === 'A' ? (isDark ? 'bg-green-900/40' : 'bg-green-100') :
+                geoData.grade === 'B' ? (isDark ? 'bg-teal-900/40' : 'bg-teal-100') :
+                geoData.grade === 'C' ? (isDark ? 'bg-yellow-900/40' : 'bg-yellow-100') :
+                (isDark ? 'bg-red-900/40' : 'bg-red-100')
+              }`}>
+                <Text className={`text-sm font-bold ${
+                  geoData.grade === 'A' ? (isDark ? 'text-green-300' : 'text-green-700') :
+                  geoData.grade === 'B' ? (isDark ? 'text-teal-300' : 'text-teal-700') :
+                  geoData.grade === 'C' ? (isDark ? 'text-yellow-300' : 'text-yellow-700') :
+                  (isDark ? 'text-red-300' : 'text-red-700')
+                }`}>
+                  Grade {geoData.grade}
+                </Text>
+              </View>
+              <Text className={`text-xs ${isDark ? 'text-purple-200/70' : 'text-gray-600'}`}>
+                {geoData.grading}
+              </Text>
+            </View>
+          </View>
+
+          {/* Breakdown bars */}
+          {geoData.breakdown && (
+            <View className="gap-2 mb-4">
+              {Object.entries(geoData.breakdown).map(([key, val]: [string, any]) => {
+                const label = key === 'answerReadiness' ? 'Answer-Readiness' :
+                  key === 'structuredData' ? 'Structured Data' :
+                  key === 'authoritySignals' ? 'Authority Signals' : 'AI-Parseable Structure';
+                const pct = Math.round((val.score / val.max) * 100);
+                return (
+                  <View key={key}>
+                    <View className="flex-row justify-between mb-1">
+                      <Text className={`text-xs ${isDark ? 'text-purple-200/70' : 'text-gray-600'}`}>{label}</Text>
+                      <Text className={`text-xs font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{val.score}/{val.max}</Text>
+                    </View>
+                    <View className={`h-1.5 rounded-full ${isDark ? 'bg-purple-900/40' : 'bg-purple-100'}`}>
+                      <View
+                        className={`h-1.5 rounded-full ${isDark ? 'bg-purple-400' : 'bg-purple-500'}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          )}
+
+          {/* GEO Recommendations */}
+          {geoData.recommendations && geoData.recommendations.length > 0 && (
+            <View className="gap-2">
+              <Text className={`text-xs font-semibold ${isDark ? 'text-purple-300' : 'text-purple-700'} mb-1`}>
+                RECOMMENDATIONS FOR AI VISIBILITY
+              </Text>
+              {geoData.recommendations.map((rec: string, idx: number) => (
+                <View key={idx} className={`flex-row gap-2 p-3 rounded-xl ${isDark ? 'bg-purple-950/30 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'}`}>
+                  <Text className={`text-xs ${isDark ? 'text-purple-300' : 'text-purple-700'} font-bold`}>{idx + 1}.</Text>
+                  <Text className={`flex-1 text-xs leading-5 ${isDark ? 'text-purple-100/80' : 'text-gray-700'}`}>{rec}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Strengths */}
       <View className={`px-6 py-6 border-t ${isDark ? 'border-teal-500/20' : 'border-gray-100'}`}>
