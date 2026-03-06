@@ -105,6 +105,64 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // SaaS multi-tenancy tables
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS agencies (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        tier VARCHAR(20) DEFAULT 'free',
+        active BOOLEAN DEFAULT true,
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id SERIAL PRIMARY KEY,
+        agency_id INTEGER REFERENCES agencies(id) ON DELETE CASCADE,
+        key_hash VARCHAR(64) UNIQUE NOT NULL,
+        key_prefix VARCHAR(10) NOT NULL,
+        label VARCHAR(100),
+        tier VARCHAR(20) DEFAULT 'free',
+        monthly_limit INTEGER DEFAULT 50,
+        usage_this_month INTEGER DEFAULT 0,
+        usage_reset_at TIMESTAMP DEFAULT (DATE_TRUNC('month', NOW()) + INTERVAL '1 month'),
+        active BOOLEAN DEFAULT true,
+        last_used_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS usage_log (
+        id SERIAL PRIMARY KEY,
+        api_key_id INTEGER REFERENCES api_keys(id) ON DELETE CASCADE,
+        agency_id INTEGER REFERENCES agencies(id) ON DELETE CASCADE,
+        endpoint VARCHAR(100) NOT NULL,
+        url_analyzed VARCHAR(2048),
+        response_time_ms INTEGER,
+        success BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Tier limits table for easy config
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS tier_limits (
+        tier VARCHAR(20) PRIMARY KEY,
+        monthly_analyses INTEGER NOT NULL,
+        features JSONB NOT NULL DEFAULT '{}'
+      );
+      INSERT INTO tier_limits (tier, monthly_analyses, features) VALUES
+        ('free', 50, '{"crawl":true,"geo":true,"performance":true,"pdf":false,"compare":false,"bulk":false,"monitor":false,"sitecrawl":false}'),
+        ('starter', 500, '{"crawl":true,"geo":true,"performance":true,"pdf":true,"compare":true,"bulk":false,"monitor":false,"sitecrawl":false}'),
+        ('pro', 2000, '{"crawl":true,"geo":true,"performance":true,"pdf":true,"compare":true,"bulk":true,"monitor":true,"sitecrawl":false}'),
+        ('agency', 10000, '{"crawl":true,"geo":true,"performance":true,"pdf":true,"compare":true,"bulk":true,"monitor":true,"sitecrawl":true}')
+      ON CONFLICT (tier) DO NOTHING;
+    `);
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);

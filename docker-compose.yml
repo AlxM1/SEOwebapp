@@ -20,9 +20,21 @@ services:
       - BRAND_PRIMARY_COLOR=${BRAND_PRIMARY_COLOR:-#14b8a6}
       - BRAND_CTA_TEXT=${BRAND_CTA_TEXT:-Contact Us}
       - BRAND_CTA_URL=${BRAND_CTA_URL:-}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-}
     depends_on:
       postgres:
         condition: service_healthy
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: seo-dashboard
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NEXT_PUBLIC_API_URL=${API_URL:-https://analysis.seoh.ca/api}
 
   postgres:
     image: postgres:16-alpine
