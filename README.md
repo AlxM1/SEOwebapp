@@ -72,3 +72,24 @@ BRAND_CTA_URL=https://youragency.com/contact
 
 ### White-label config
 `GET /api/config` → Brand settings for frontend
+
+### SERP + Social + Readability Preview
+`POST /api/preview/analyze` → `{ url }` → SERP preview data, social share previews, Flesch readability score
+
+### Robots.txt + Sitemap + Redirect Check
+`POST /api/technical/check` → `{ url }` → robots.txt parsed, sitemap validated, redirect chain traced
+
+### Keyword Density Analysis
+`POST /api/keywords/analyze` → `{ url, targetKeyword? }` → top keywords, bigrams, keyword density, stuffing detection
+
+### Site-Wide Crawl
+`POST /api/sitecrawl/crawl` → `{ url, maxPages? }` → crawls up to 50 pages, finds broken links, duplicate titles/metas, thin content
+
+### Monitoring + Email Alerts
+`POST /api/monitor/add` → `{ url, alertEmail, alertThreshold, checkFrequency }` — requires auth
+`GET /api/monitor/list` — list monitored URLs
+`POST /api/monitor/:id/check` — run manual check
+`GET /api/monitor/:id/history` — score history
+
+### Schema Validation + Featured Snippet Checker
+`POST /api/schema/validate` → `{ url }` → validates JSON-LD schemas, checks featured snippet eligibility

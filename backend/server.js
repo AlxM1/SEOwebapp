@@ -16,6 +16,12 @@ const geoRoutes = require('./routes/geo');
 const compareRoutes = require('./routes/compare');
 const bulkRoutes = require('./routes/bulk');
 const reportRoutes = require('./routes/report');
+const previewRoutes = require('./routes/preview');
+const technicalRoutes = require('./routes/technical');
+const keywordsRoutes = require('./routes/keywords');
+const sitecrawlRoutes = require('./routes/sitecrawl');
+const monitorRoutes = require('./routes/monitor');
+const schemaRoutes = require('./routes/schema');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +44,12 @@ app.use('/api/geo', geoRoutes);
 app.use('/api/compare', compareRoutes);
 app.use('/api/bulk', bulkRoutes);
 app.use('/api/report', reportRoutes);
+app.use('/api/preview', previewRoutes);
+app.use('/api/technical', technicalRoutes);
+app.use('/api/keywords', keywordsRoutes);
+app.use('/api/sitecrawl', sitecrawlRoutes);
+app.use('/api/monitor', monitorRoutes);
+app.use('/api/schema', schemaRoutes);
 
 // White-label config — safe to expose to frontend
 app.get('/api/config', (req, res) => {

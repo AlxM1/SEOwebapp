@@ -76,6 +76,35 @@ const initializeDatabase = async () => {
       );
     `);
 
+    // Monitoring table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS monitored_urls (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+        url VARCHAR(2048) NOT NULL,
+        alert_email VARCHAR(255),
+        alert_threshold INTEGER DEFAULT 10,
+        check_frequency VARCHAR(20) DEFAULT 'weekly',
+        last_seo_score INTEGER,
+        last_geo_score INTEGER,
+        last_checked_at TIMESTAMP,
+        active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS monitoring_history (
+        id SERIAL PRIMARY KEY,
+        monitored_url_id INTEGER REFERENCES monitored_urls(id) ON DELETE CASCADE,
+        seo_score INTEGER,
+        geo_score INTEGER,
+        performance_score INTEGER,
+        issues_count INTEGER,
+        checked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);
