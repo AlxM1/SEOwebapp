@@ -1,45 +1,92 @@
 import { useState, useCallback } from "react"
 import { addPropertyControls, ControlType } from "framer"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
-interface SEOResult {
+interface CrawlResult {
   url: string
   seoScore: number
-  geoScore: number
-  performance: { lcp: number; fcp: number; cls: number; ttfb: number; score: number }
-  issues: Array<{ type: string; severity: string; message: string }>
-  strengths: string[]
-  geo: {
-    score: number
-    breakdown: { answerReadiness: number; structuredData: number; authoritySignals: number; parseableStructure: number }
-  }
+  title?: string
+  titleLength?: number
+  metaDescription?: string
+  metaDescriptionLength?: number
+  isHttps?: boolean
+  mobileOptimized?: boolean
+  content?: { wordCount: number }
+  headings?: { h1: string[]; h2: string[] }
+  links?: { internal: number; external: number }
+  images?: { total: number; withAlt: number; withoutAlt: number }
+  strengths?: string[]
+  issues?: string[]
 }
 
-// ─── Score Ring SVG ────────────────────────────────────────────────────────────
+interface GeoResult {
+  geoScore: number
+  grade: string
+  grading: string
+  breakdown: {
+    answerReadiness: { score: number; max: number }
+    structuredData: { score: number; max: number }
+    authoritySignals: { score: number; max: number }
+    parseableStructure: { score: number; max: number }
+  }
+  recommendations?: string[]
+  signals?: Record<string, boolean>
+  schemas?: string[]
+}
 
-function ScoreRing({ score, size = 80, color }: { score: number; size?: number; color: string }) {
+interface Branding {
+  name: string
+  color: string
+  tagline: string
+  website: string
+  logoUrl: string
+}
+
+// ─── Score Ring ────────────────────────────────────────────────────────────────
+
+function ScoreRing({ score, size = 80, color, label }: { score: number; size?: number; color: string; label?: string }) {
   const r = (size - 10) / 2
   const circ = 2 * Math.PI * r
   const offset = circ - (score / 100) * circ
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} />
-      <circle
-        cx={size / 2} cy={size / 2} r={r} fill="none"
-        stroke={color} strokeWidth={8}
-        strokeDasharray={circ} strokeDashoffset={offset}
-        strokeLinecap="round"
-        style={{ transition: "stroke-dashoffset 0.8s ease" }}
-      />
-      <text
-        x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="middle"
-        fill="white" fontSize={size * 0.22} fontWeight="700" fontFamily="-apple-system,sans-serif"
-        style={{ transform: "rotate(90deg)", transformOrigin: `${size / 2}px ${size / 2}px` }}
-      >
-        {score}
-      </text>
-    </svg>
+    <div style={{ display: "flex", flexDirection: "column" as any, alignItems: "center", gap: 6 }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth={8} />
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={color} strokeWidth={8}
+          strokeDasharray={circ} strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dashoffset 0.8s ease" }}
+        />
+        <text
+          x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="middle"
+          fill="white" fontSize={size * 0.22} fontWeight="700" fontFamily="-apple-system,sans-serif"
+          style={{ transform: "rotate(90deg)", transformOrigin: `${size / 2}px ${size / 2}px` }}
+        >
+          {score}
+        </text>
+      </svg>
+      {label && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>{label}</div>}
+    </div>
+  )
+}
+
+// ─── Breakdown Bar ─────────────────────────────────────────────────────────────
+
+function BreakdownBar({ label, score, max, color }: { label: string; score: number; max: number; color: string }) {
+  const pct = score / max
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+        <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{label}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color }}>{score}/{max}</span>
+      </div>
+      <div style={{ height: 3, background: "rgba(255,255,255,0.08)", borderRadius: 2 }}>
+        <div style={{ height: 3, width: `${pct * 100}%`, background: color, borderRadius: 2, transition: "width 0.8s ease" }} />
+      </div>
+    </div>
   )
 }
 
@@ -54,13 +101,18 @@ export default function SEOAnalyzer({
   borderColor = "#1a1a1a",
   fontFamily = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   borderRadius = 16,
-  showGEO = true,
-  showPerformance = true,
-  showIssues = true,
   placeholder = "https://example.com",
   buttonText = "Analyze",
-  width = 560,
-  height = "auto" as any,
+  // Branding
+  brandName = "SEO Analytics",
+  brandColor = "#111111",
+  brandTagline = "SEO & GEO Analysis Report",
+  brandWebsite = "",
+  brandLogoUrl = "",
+  // Feature flags
+  showGEO = true,
+  showPDF = true,
+  width = 580,
 }: {
   apiKey?: string
   apiUrl?: string
@@ -70,19 +122,26 @@ export default function SEOAnalyzer({
   borderColor?: string
   fontFamily?: string
   borderRadius?: number
-  showGEO?: boolean
-  showPerformance?: boolean
-  showIssues?: boolean
   placeholder?: string
   buttonText?: string
+  brandName?: string
+  brandColor?: string
+  brandTagline?: string
+  brandWebsite?: string
+  brandLogoUrl?: string
+  showGEO?: boolean
+  showPDF?: boolean
   width?: number
-  height?: any
 }) {
   const [url, setUrl] = useState("")
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<SEOResult | null>(null)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [crawl, setCrawl] = useState<CrawlResult | null>(null)
+  const [geo, setGeo] = useState<GeoResult | null>(null)
   const [error, setError] = useState("")
-  const [activeTab, setActiveTab] = useState<"overview" | "geo" | "issues">("overview")
+  const [activeTab, setActiveTab] = useState<"seo" | "geo" | "issues">("seo")
+
+  const headers = { "X-Api-Key": apiKey, "Content-Type": "application/json" }
 
   const analyze = useCallback(async () => {
     if (!url.trim()) return
@@ -90,41 +149,29 @@ export default function SEOAnalyzer({
 
     setLoading(true)
     setError("")
-    setResult(null)
+    setCrawl(null)
+    setGeo(null)
 
     try {
-      // Run crawl + GEO in parallel
-      const [crawlRes, geoRes] = await Promise.all([
-        fetch(`${apiUrl}/api/crawl/analyze`, {
-          method: "POST",
-          headers: { "X-Api-Key": apiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: url.trim() }),
-        }),
-        showGEO ? fetch(`${apiUrl}/api/geo/score`, {
-          method: "POST",
-          headers: { "X-Api-Key": apiKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ url: url.trim() }),
-        }) : Promise.resolve(null),
-      ])
+      const requests: Promise<Response>[] = [
+        fetch(`${apiUrl}/api/crawl/analyze`, { method: "POST", headers, body: JSON.stringify({ url: url.trim() }) }),
+      ]
+      if (showGEO) {
+        requests.push(fetch(`${apiUrl}/api/geo/score`, { method: "POST", headers, body: JSON.stringify({ url: url.trim() }) }))
+      }
+
+      const [crawlRes, geoRes] = await Promise.all(requests)
 
       if (!crawlRes.ok) {
         const err = await crawlRes.json()
         throw new Error(err.error || `Error ${crawlRes.status}`)
       }
 
-      const crawl = await crawlRes.json()
-      const geo = geoRes?.ok ? await geoRes.json() : null
+      const crawlData = await crawlRes.json()
+      const geoData = geoRes?.ok ? await geoRes.json() : null
 
-      setResult({
-        url: url.trim(),
-        seoScore: crawl.seoScore ?? crawl.score ?? 0,
-        geoScore: geo?.score ?? 0,
-        performance: crawl.performance ?? { lcp: 0, fcp: 0, cls: 0, ttfb: 0, score: 0 },
-        issues: crawl.issues ?? [],
-        strengths: crawl.strengths ?? [],
-        geo: geo ?? { score: 0, breakdown: { answerReadiness: 0, structuredData: 0, authoritySignals: 0, parseableStructure: 0 } },
-      })
-      setActiveTab("overview")
+      setCrawl(crawlData)
+      if (geoData) setGeo(geoData)
     } catch (e: any) {
       setError(e.message || "Analysis failed")
     } finally {
@@ -132,206 +179,226 @@ export default function SEOAnalyzer({
     }
   }, [url, apiKey, apiUrl, showGEO])
 
-  const s: Record<string, any> = {
+  const downloadPDF = useCallback(async () => {
+    if (!crawl) return
+    setPdfLoading(true)
+    try {
+      const branding: Branding = {
+        name: brandName,
+        color: brandColor || accentColor,
+        tagline: brandTagline,
+        website: brandWebsite,
+        logoUrl: brandLogoUrl,
+      }
+      const res = await fetch(`${apiUrl}/api/report/pdf`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ url: crawl.url, crawlData: crawl, geoData: geo, branding }),
+      })
+      if (!res.ok) throw new Error("PDF generation failed")
+      const blob = await res.blob()
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      const hostname = new URL(crawl.url).hostname
+      link.download = `${brandName.replace(/\s+/g, "-")}-SEO-Report-${hostname}-${new Date().toISOString().split("T")[0]}.pdf`
+      link.click()
+      URL.revokeObjectURL(link.href)
+    } catch (e: any) {
+      setError("PDF failed: " + (e.message || "unknown error"))
+    } finally {
+      setPdfLoading(false)
+    }
+  }, [crawl, geo, apiUrl, apiKey, brandName, brandColor, brandTagline, brandWebsite, brandLogoUrl, accentColor])
+
+  // ── Styles ─────────────────────────────────────────────────────────────────
+
+  const s = {
     wrap: {
-      width, fontFamily, backgroundColor, color: "#fff",
-      borderRadius, border: `1px solid ${borderColor}`,
-      overflow: "hidden", boxSizing: "border-box",
+      fontFamily, width, backgroundColor, color: "white",
+      borderRadius, padding: 24, boxSizing: "border-box" as any,
+      border: `1px solid ${borderColor}`,
     },
     input: {
-      width: "100%", background: "rgba(255,255,255,0.04)", border: `1px solid ${borderColor}`,
-      borderRadius: 10, padding: "12px 16px", color: "#fff", fontSize: 14,
-      outline: "none", boxSizing: "border-box" as any, fontFamily,
+      width: "100%", padding: "12px 16px", background: cardBackground,
+      border: `1px solid ${borderColor}`, borderRadius: borderRadius * 0.6,
+      color: "white", fontSize: 14, outline: "none", boxSizing: "border-box" as any,
     },
-    btn: {
-      background: accentColor, border: "none", borderRadius: 10, padding: "12px 20px",
-      color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-      whiteSpace: "nowrap" as any, fontFamily, transition: "opacity 0.2s",
-      opacity: loading ? 0.6 : 1,
-    },
+    btn: (disabled: boolean, bg = accentColor) => ({
+      padding: "12px 22px", borderRadius: borderRadius * 0.6, border: "none",
+      background: disabled ? "rgba(255,255,255,0.08)" : bg,
+      color: disabled ? "rgba(255,255,255,0.3)" : "white",
+      fontWeight: 600, fontSize: 14, cursor: disabled ? "not-allowed" : "pointer",
+      whiteSpace: "nowrap" as any, transition: "opacity 0.2s",
+      flexShrink: 0,
+    }),
     card: {
       background: cardBackground, border: `1px solid ${borderColor}`,
-      borderRadius: borderRadius - 4, padding: 20,
+      borderRadius: borderRadius * 0.75, padding: 16, marginBottom: 12,
     },
-    label: { fontSize: 11, color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as any, letterSpacing: 1, marginBottom: 4 },
     tab: (active: boolean) => ({
-      padding: "6px 14px", borderRadius: 8, fontSize: 13, fontWeight: 500, cursor: "pointer",
+      padding: "7px 16px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
       background: active ? accentColor : "transparent",
-      color: active ? "#fff" : "rgba(255,255,255,0.4)", border: "none", fontFamily,
+      color: active ? "white" : "rgba(255,255,255,0.4)",
+      border: "none", transition: "all 0.2s",
     }),
+    grade: (g: string) => {
+      const c: Record<string, string> = { A: "#22c55e", B: "#14b8a6", C: "#f59e0b", D: "#f97316", F: "#ef4444" }
+      return c[g] || "#6b7280"
+    },
   }
 
   const scoreColor = (n: number) => n >= 80 ? "#22c55e" : n >= 60 ? "#f59e0b" : "#ef4444"
 
   return (
     <div style={s.wrap}>
-      {/* Input bar */}
-      <div style={{ padding: 24, borderBottom: `1px solid ${borderColor}` }}>
-        <div style={{ display: "flex", gap: 10 }}>
-          <input
-            style={s.input} value={url} placeholder={placeholder}
-            onChange={e => setUrl(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && !loading && analyze()}
-          />
-          <button style={s.btn} onClick={analyze} disabled={loading}>
-            {loading ? "Analyzing…" : buttonText}
-          </button>
-        </div>
-        {error && (
-          <div style={{ marginTop: 12, padding: "10px 14px", background: "rgba(239,68,68,0.1)", borderRadius: 8, border: "1px solid rgba(239,68,68,0.3)", fontSize: 13, color: "#fca5a5" }}>
-            {error}
-          </div>
-        )}
+      {/* Input row */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
+        <input
+          style={s.input}
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={e => e.key === "Enter" && !loading && analyze()}
+        />
+        <button style={s.btn(loading || !url.trim())} onClick={analyze} disabled={loading || !url.trim()}>
+          {loading ? "Analyzing…" : buttonText}
+        </button>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div style={{ ...s.card, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: 13 }}>
+          {error}
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (
-        <div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
-          <div style={{ width: 32, height: 32, border: `3px solid ${borderColor}`, borderTopColor: accentColor, borderRadius: "50%", margin: "0 auto 16px", animation: "spin 0.8s linear infinite" }} />
-          Crawling {url}…
-          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+        <div style={{ textAlign: "center", padding: 48, color: "rgba(255,255,255,0.4)", fontSize: 14 }}>
+          Analyzing {url}…
         </div>
       )}
 
       {/* Results */}
-      {result && !loading && (
-        <div style={{ padding: 24 }}>
-          {/* Tabs */}
-          <div style={{ display: "flex", gap: 4, marginBottom: 20, background: "rgba(255,255,255,0.04)", padding: 4, borderRadius: 10, width: "fit-content" }}>
-            <button style={s.tab(activeTab === "overview")} onClick={() => setActiveTab("overview")}>Overview</button>
-            {showGEO && <button style={s.tab(activeTab === "geo")} onClick={() => setActiveTab("geo")}>GEO Score</button>}
-            {showIssues && <button style={s.tab(activeTab === "issues")} onClick={() => setActiveTab("issues")}>Issues {result.issues.length > 0 && `(${result.issues.length})`}</button>}
+      {crawl && !loading && (
+        <div>
+          {/* Score rings */}
+          <div style={{ ...s.card, display: "flex", justifyContent: "center", gap: 40, padding: "24px 16px" }}>
+            <ScoreRing score={crawl.seoScore ?? 0} color={scoreColor(crawl.seoScore ?? 0)} label="SEO Score" />
+            {geo && showGEO && (
+              <ScoreRing score={geo.geoScore} color={s.grade(geo.grade)} label="GEO / AI" />
+            )}
           </div>
 
-          {/* Overview Tab */}
-          {activeTab === "overview" && (
+          {/* Tabs */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+            <button style={s.tab(activeTab === "seo")} onClick={() => setActiveTab("seo")}>SEO Details</button>
+            {showGEO && geo && <button style={s.tab(activeTab === "geo")} onClick={() => setActiveTab("geo")}>GEO / AI</button>}
+            <button style={s.tab(activeTab === "issues")} onClick={() => setActiveTab("issues")}>Issues</button>
+          </div>
+
+          {/* SEO Tab */}
+          {activeTab === "seo" && (
             <div>
-              <div style={{ display: "grid", gridTemplateColumns: showGEO ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 16 }}>
-                <div style={{ ...s.card, display: "flex", alignItems: "center", gap: 16 }}>
-                  <ScoreRing score={result.seoScore} color={scoreColor(result.seoScore)} />
-                  <div>
-                    <div style={s.label}>SEO Score</div>
-                    <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
-                      {result.seoScore >= 80 ? "Strong" : result.seoScore >= 60 ? "Needs work" : "Critical issues"}
-                    </div>
-                  </div>
+              {[
+                { label: "Title", value: crawl.title ? `${crawl.title} (${crawl.titleLength} chars)` : "Missing" },
+                { label: "Meta Description", value: crawl.metaDescription ? `${crawl.metaDescriptionLength} chars${(crawl.metaDescriptionLength ?? 0) > 160 ? " — too long" : ""}` : "Missing" },
+                { label: "Word Count", value: `${crawl.content?.wordCount ?? 0} words` },
+                { label: "Internal Links", value: String(crawl.links?.internal ?? 0) },
+                { label: "External Links", value: String(crawl.links?.external ?? 0) },
+                { label: "Images", value: `${crawl.images?.total ?? 0} total, ${crawl.images?.withoutAlt ?? 0} missing alt` },
+                { label: "HTTPS", value: crawl.isHttps ? "✓ Yes" : "✗ No" },
+                { label: "Mobile", value: crawl.mobileOptimized ? "✓ Optimised" : "✗ Not optimised" },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: `1px solid ${borderColor}`, fontSize: 13 }}>
+                  <span style={{ color: "rgba(255,255,255,0.5)" }}>{label}</span>
+                  <span style={{ color: "white", fontWeight: 500, maxWidth: "60%", textAlign: "right" }}>{value}</span>
                 </div>
-                {showGEO && (
-                  <div style={{ ...s.card, display: "flex", alignItems: "center", gap: 16 }}>
-                    <ScoreRing score={result.geoScore} color={accentColor} />
-                    <div>
-                      <div style={s.label}>GEO Score</div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.6)", marginTop: 4 }}>
-                        {result.geoScore >= 80 ? "AI-optimized" : result.geoScore >= 60 ? "Partially visible" : "Not AI-ready"}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {showPerformance && result.performance.score > 0 && (
-                <div style={{ ...s.card, marginBottom: 12 }}>
-                  <div style={{ ...s.label, marginBottom: 12 }}>Performance</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
-                    {[
-                      { key: "LCP", val: `${result.performance.lcp}s` },
-                      { key: "FCP", val: `${result.performance.fcp}s` },
-                      { key: "CLS", val: result.performance.cls },
-                      { key: "TTFB", val: `${result.performance.ttfb}ms` },
-                    ].map(m => (
-                      <div key={m.key} style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: accentColor }}>{m.val}</div>
-                        <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginTop: 2 }}>{m.key}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {result.strengths.length > 0 && (
-                <div style={s.card}>
-                  <div style={{ ...s.label, marginBottom: 10 }}>Strengths</div>
-                  <div style={{ display: "flex", flexWrap: "wrap" as any, gap: 6 }}>
-                    {result.strengths.slice(0, 6).map((str, i) => (
-                      <span key={i} style={{ padding: "4px 10px", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.2)", borderRadius: 6, fontSize: 12, color: "#86efac" }}>
-                        {str}
-                      </span>
-                    ))}
-                  </div>
+              ))}
+              {crawl.strengths && crawl.strengths.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as any }}>Strengths</div>
+                  {crawl.strengths.slice(0, 4).map((s2, i) => (
+                    <div key={i} style={{ fontSize: 13, color: "#22c55e", marginBottom: 5 }}>✓ {s2}</div>
+                  ))}
                 </div>
               )}
             </div>
           )}
 
           {/* GEO Tab */}
-          {activeTab === "geo" && showGEO && (
-            <div style={s.card}>
-              <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
-                <ScoreRing score={result.geo.score} size={96} color={accentColor} />
-                <div>
-                  <div style={{ fontSize: 24, fontWeight: 700 }}>{result.geo.score}/100</div>
-                  <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>AI Search Visibility</div>
-                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", marginTop: 4 }}>
-                    {result.geo.score >= 80 ? "This page is well-optimized for AI search engines (ChatGPT, Perplexity, Gemini)" :
-                     result.geo.score >= 60 ? "Partially visible in AI search. Improvements will increase citation frequency" :
-                     "Low visibility in AI search. Significant optimization needed"}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                {[
-                  { key: "Answer Readiness", val: result.geo.breakdown.answerReadiness, max: 40 },
-                  { key: "Structured Data", val: result.geo.breakdown.structuredData, max: 20 },
-                  { key: "Authority Signals", val: result.geo.breakdown.authoritySignals, max: 20 },
-                  { key: "Parseable Structure", val: result.geo.breakdown.parseableStructure, max: 20 },
-                ].map(dim => (
-                  <div key={dim.key} style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>{dim.key}</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: accentColor }}>{dim.val}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/{dim.max}</span></div>
-                    <div style={{ marginTop: 8, height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 2 }}>
-                      <div style={{ height: 3, width: `${(dim.val / dim.max) * 100}%`, background: accentColor, borderRadius: 2, transition: "width 0.8s ease" }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Issues Tab */}
-          {activeTab === "issues" && showIssues && (
+          {activeTab === "geo" && geo && showGEO && (
             <div>
-              {result.issues.length === 0 ? (
-                <div style={{ ...s.card, textAlign: "center", padding: 32, color: "rgba(255,255,255,0.4)" }}>No issues found</div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column" as any, gap: 8 }}>
-                  {result.issues.map((issue, i) => {
-                    const colors: Record<string, string> = { critical: "#ef4444", warning: "#f59e0b", info: "#3b82f6" }
-                    const c = colors[issue.severity] || "#6b7280"
-                    return (
-                      <div key={i} style={{ ...s.card, display: "flex", gap: 12, alignItems: "flex-start" }}>
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: c, marginTop: 5, flexShrink: 0 }} />
-                        <div>
-                          <div style={{ fontSize: 12, color: c, fontWeight: 600, marginBottom: 2, textTransform: "capitalize" as any }}>{issue.severity}</div>
-                          <div style={{ fontSize: 13, color: "rgba(255,255,255,0.8)" }}>{issue.message}</div>
-                        </div>
-                      </div>
-                    )
-                  })}
+              <div style={{ ...s.card, display: "flex", alignItems: "center", gap: 16 }}>
+                <div>
+                  <div style={{ fontSize: 36, fontWeight: 800, color: s.grade(geo.grade) }}>{geo.geoScore}<span style={{ fontSize: 14, color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>/100</span></div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: s.grade(geo.grade) }}>Grade {geo.grade}</div>
+                </div>
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", flex: 1 }}>{geo.grading}</div>
+              </div>
+              <div style={{ marginTop: 8 }}>
+                {Object.entries(geo.breakdown || {}).map(([k, v]) => {
+                  const labels: Record<string, string> = {
+                    answerReadiness: "Answer Readiness",
+                    structuredData: "Structured Data",
+                    authoritySignals: "Authority Signals",
+                    parseableStructure: "Parseable Structure",
+                  }
+                  const pct = v.score / v.max
+                  const c = pct >= 0.7 ? "#22c55e" : pct >= 0.4 ? "#f59e0b" : "#ef4444"
+                  return <BreakdownBar key={k} label={labels[k] || k} score={v.score} max={v.max} color={c} />
+                })}
+              </div>
+              {geo.recommendations && geo.recommendations.length > 0 && (
+                <div style={{ marginTop: 14 }}>
+                  <div style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginBottom: 8, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" as any }}>How to Improve</div>
+                  {geo.recommendations.map((r, i) => (
+                    <div key={i} style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", marginBottom: 8, paddingLeft: 12, borderLeft: `2px solid ${accentColor}` }}>{r}</div>
+                  ))}
                 </div>
               )}
             </div>
           )}
 
+          {/* Issues Tab */}
+          {activeTab === "issues" && (
+            <div>
+              {(!crawl.issues || crawl.issues.length === 0) ? (
+                <div style={{ textAlign: "center", padding: 32, color: "rgba(255,255,255,0.3)", fontSize: 13 }}>No issues found</div>
+              ) : (
+                crawl.issues.map((issue, i) => (
+                  <div key={i} style={{ ...s.card, display: "flex", gap: 10, alignItems: "flex-start" }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#f59e0b", marginTop: 4, flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, color: "rgba(255,255,255,0.75)" }}>{issue}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* PDF Download */}
+          {showPDF && (
+            <div style={{ marginTop: 16, display: "flex", justifyContent: "flex-end" }}>
+              <button
+                style={s.btn(pdfLoading, brandColor || accentColor)}
+                onClick={downloadPDF}
+                disabled={pdfLoading}
+              >
+                {pdfLoading ? "Generating PDF…" : "⬇ Download PDF Report"}
+              </button>
+            </div>
+          )}
+
           {/* Footer */}
-          <div style={{ marginTop: 16, fontSize: 11, color: "rgba(255,255,255,0.2)", textAlign: "center" }}>
-            Powered by SEO Analytics API · {new Date().toLocaleDateString()}
+          <div style={{ marginTop: 16, fontSize: 11, color: "rgba(255,255,255,0.15)", textAlign: "center" }}>
+            {brandName} · Powered by SEO Analytics API · {new Date().toLocaleDateString()}
           </div>
         </div>
       )}
 
       {/* Empty state */}
-      {!result && !loading && !error && (
-        <div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 14 }}>
+      {!crawl && !loading && !error && (
+        <div style={{ padding: 48, textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: 14 }}>
           Enter a URL above to analyze SEO + GEO visibility
         </div>
       )}
@@ -339,21 +406,29 @@ export default function SEOAnalyzer({
   )
 }
 
-// ─── Framer Property Controls ─────────────────────────────────────────────────
+// ─── Framer Property Controls ──────────────────────────────────────────────────
 
 addPropertyControls(SEOAnalyzer, {
-  apiKey: { type: ControlType.String, title: "API Key", defaultValue: "", placeholder: "seoh_..." },
-  apiUrl: { type: ControlType.String, title: "API URL", defaultValue: "https://analysis.seoh.ca" },
-  accentColor: { type: ControlType.Color, title: "Accent Color", defaultValue: "#14b8a6" },
-  backgroundColor: { type: ControlType.Color, title: "Background", defaultValue: "#0a0a0a" },
-  cardBackground: { type: ControlType.Color, title: "Card Background", defaultValue: "#111111" },
-  borderColor: { type: ControlType.Color, title: "Border Color", defaultValue: "#1a1a1a" },
-  fontFamily: { type: ControlType.String, title: "Font Family", defaultValue: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
-  borderRadius: { type: ControlType.Number, title: "Border Radius", defaultValue: 16, min: 0, max: 32, step: 1 },
-  showGEO: { type: ControlType.Boolean, title: "Show GEO Score", defaultValue: true },
-  showPerformance: { type: ControlType.Boolean, title: "Show Performance", defaultValue: true },
-  showIssues: { type: ControlType.Boolean, title: "Show Issues Tab", defaultValue: true },
-  placeholder: { type: ControlType.String, title: "Input Placeholder", defaultValue: "https://example.com" },
-  buttonText: { type: ControlType.String, title: "Button Text", defaultValue: "Analyze" },
-  width: { type: ControlType.Number, title: "Width", defaultValue: 560, min: 320, max: 900, step: 10 },
+  // Connection
+  apiKey:        { type: ControlType.String,  title: "API Key",          defaultValue: "", placeholder: "seoh_..." },
+  apiUrl:        { type: ControlType.String,  title: "API URL",          defaultValue: "https://analysis.seoh.ca" },
+  // Branding (for PDF)
+  brandName:     { type: ControlType.String,  title: "Brand Name",       defaultValue: "SEO Analytics" },
+  brandColor:    { type: ControlType.Color,   title: "Brand Color",      defaultValue: "#111111" },
+  brandTagline:  { type: ControlType.String,  title: "Brand Tagline",    defaultValue: "SEO & GEO Analysis Report" },
+  brandWebsite:  { type: ControlType.String,  title: "Brand Website",    defaultValue: "" },
+  brandLogoUrl:  { type: ControlType.String,  title: "Brand Logo URL",   defaultValue: "", placeholder: "https://..." },
+  // Appearance
+  accentColor:   { type: ControlType.Color,   title: "Accent Color",     defaultValue: "#14b8a6" },
+  backgroundColor: { type: ControlType.Color, title: "Background",       defaultValue: "#0a0a0a" },
+  cardBackground: { type: ControlType.Color,  title: "Card Background",  defaultValue: "#111111" },
+  borderColor:   { type: ControlType.Color,   title: "Border Color",     defaultValue: "#1a1a1a" },
+  fontFamily:    { type: ControlType.String,  title: "Font Family",      defaultValue: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
+  borderRadius:  { type: ControlType.Number,  title: "Border Radius",    defaultValue: 16, min: 0, max: 32, step: 1 },
+  // Options
+  showGEO:       { type: ControlType.Boolean, title: "Show GEO Score",   defaultValue: true },
+  showPDF:       { type: ControlType.Boolean, title: "Show PDF Button",  defaultValue: true },
+  placeholder:   { type: ControlType.String,  title: "Input Placeholder",defaultValue: "https://example.com" },
+  buttonText:    { type: ControlType.String,  title: "Button Text",      defaultValue: "Analyze" },
+  width:         { type: ControlType.Number,  title: "Width",            defaultValue: 580, min: 320, max: 1000, step: 10 },
 })
