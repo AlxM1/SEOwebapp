@@ -39,7 +39,7 @@ router.get('/checkout/:tier', authenticateToken, async (req, res) => {
     'checkout[custom][email]': user.email,
   });
 
-  const checkoutUrl = `https://${storeSlug}.lemonsqueezy.com/buy/${variantId}?${params.toString()}`;
+  const checkoutUrl = `https://${storeSlug}.lemonsqueezy.com/checkout/buy/${variantId}?${params.toString()}`;
 
   res.json({ checkoutUrl, tier, price: TIER_PRICES[tier].price });
 });
