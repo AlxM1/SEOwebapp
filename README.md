@@ -101,7 +101,7 @@ The hosted API product uses LemonSqueezy for subscription billing.
 ### Setup
 
 1. Create a LemonSqueezy store at lemonsqueezy.com
-2. Create 3 products (Starter $99, Pro $199, Agency $499)
+2. Create 3 products (Starter $59.99, Pro $109.99, Agency $399.99)
 3. Copy variant IDs to your `.env`:
    ```
    LEMON_STORE_SLUG=your-store-slug

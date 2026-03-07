@@ -5,9 +5,9 @@ const { authenticateToken } = require('../middleware/auth');
 const router = express.Router();
 
 const TIER_PRICES = {
-  starter: { price: '$99/mo', analyses: '500', variantEnv: 'LEMON_VARIANT_STARTER' },
-  pro:     { price: '$199/mo', analyses: '2,000', variantEnv: 'LEMON_VARIANT_PRO' },
-  agency:  { price: '$499/mo', analyses: '10,000', variantEnv: 'LEMON_VARIANT_AGENCY' },
+  starter: { price: '$59.99/mo', analyses: '500', variantEnv: 'LEMON_VARIANT_STARTER' },
+  pro:     { price: '$109.99/mo', analyses: '2,000', variantEnv: 'LEMON_VARIANT_PRO' },
+  agency:  { price: '$399.99/mo', analyses: '10,000', variantEnv: 'LEMON_VARIANT_AGENCY' },
 };
 
 // Get checkout URL for a tier (authenticated)
@@ -51,7 +51,7 @@ router.get('/pricing', async (req, res) => {
   res.json({
     tiers: tiers.map(t => ({
       ...t,
-      price: { free: '$0', starter: '$99', pro: '$199', agency: '$499' }[t.tier] || 'Custom',
+      price: { free: '$0', starter: '$59.99', pro: '$109.99', agency: '$399.99' }[t.tier] || 'Custom',
     })),
   });
 });

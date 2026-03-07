@@ -244,9 +244,9 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { tier: 'free', price: '$0', analyses: '50', features: ['SEO crawl', 'GEO score', 'Performance'] },
-            { tier: 'starter', price: '$99', analyses: '500', features: ['Everything in Free', 'PDF reports', 'Competitor compare'] },
-            { tier: 'pro', price: '$199', analyses: '2,000', features: ['Everything in Starter', 'Bulk analysis', 'Monitoring + alerts'] },
-            { tier: 'agency', price: '$499', analyses: '10,000', features: ['Everything in Pro', 'Site-wide crawler', 'Priority support'] },
+            { tier: 'starter', price: '$59.99', analyses: '500', features: ['Everything in Free', 'PDF reports', 'Competitor compare'] },
+            { tier: 'pro', price: '$109.99', analyses: '2,000', features: ['Everything in Starter', 'Bulk analysis', 'Monitoring + alerts'] },
+            { tier: 'agency', price: '$399.99', analyses: '10,000', features: ['Everything in Pro', 'Site-wide crawler', 'Priority support'] },
           ].map(p => (
             <PricingCard key={p.tier} {...p} currentTier={agency?.tier || 'free'} onUpgrade={() => handleUpgrade(p.tier)} />
           ))}
