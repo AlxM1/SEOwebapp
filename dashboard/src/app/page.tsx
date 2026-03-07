@@ -92,7 +92,7 @@ export default function Dashboard() {
     if (data.checkoutUrl) {
       window.open(data.checkoutUrl, '_blank');
     } else {
-      alert(data.message || 'Contact alex@00raiser.com to upgrade');
+      alert(data.message || 'Contact us at seoh.ca/contact to upgrade');
     }
   };
 
@@ -100,7 +100,7 @@ export default function Dashboard() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">SEO Analytics</h1>
+          <h1 className="text-2xl font-bold">SEOh! Analytics</h1>
           <p className="text-gray-400 text-sm mt-1">Agency Dashboard</p>
         </div>
         <form onSubmit={login} className="bg-[#111] border border-[#1a1a1a] rounded-xl p-6 space-y-4">
@@ -116,7 +116,7 @@ export default function Dashboard() {
               className="w-full bg-[#0a0a0a] border border-[#2a2a2a] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500" />
           </div>
           <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 rounded-lg py-2.5 font-medium transition-colors">Sign In</button>
-          <p className="text-center text-xs text-gray-500">Don&apos;t have an account? <a href="mailto:alex@00raiser.com" className="text-teal-400">Contact us</a></p>
+          <p className="text-center text-xs text-gray-500">Don&apos;t have an account? <a href="https://seoh.ca/contact" target="_blank" className="text-teal-400">Contact us</a></p>
         </form>
       </div>
     </div>
@@ -131,7 +131,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-xl font-bold">SEO Analytics</h1>
+          <h1 className="text-xl font-bold">SEOh! Analytics</h1>
           <p className="text-gray-400 text-sm">{agency?.name}</p>
         </div>
         <div className="flex items-center gap-3">
