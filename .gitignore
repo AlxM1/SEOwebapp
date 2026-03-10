@@ -42,3 +42,6 @@ yarn-error.*
 
 # Expo log
 expo.log
+.env
+.env.local
+.env.production
