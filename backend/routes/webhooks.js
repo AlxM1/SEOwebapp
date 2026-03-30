@@ -1,77 +1,113 @@
 const express = require('express');
-const crypto = require('crypto');
 const { pool } = require('../db');
 
 const router = express.Router();
 
-// LemonSqueezy tier mapping — set your actual variant IDs in .env
-// LEMON_VARIANT_STARTER, LEMON_VARIANT_PRO, LEMON_VARIANT_AGENCY
-function getVariantTier(variantId) {
-  const variantStr = String(variantId);
+// Stripe price ID → tier mapping
+function getPriceTier(priceId) {
   const map = {
-    [process.env.LEMON_VARIANT_STARTER]: 'starter',
-    [process.env.LEMON_VARIANT_PRO]: 'pro',
-    [process.env.LEMON_VARIANT_AGENCY]: 'agency',
+    [process.env.STRIPE_PRICE_STARTER]: 'starter',
+    [process.env.STRIPE_PRICE_PRO]: 'pro',
+    [process.env.STRIPE_PRICE_AGENCY]: 'agency',
   };
-  return map[variantStr] || null;
+  return map[priceId] || null;
 }
 
-// Verify LemonSqueezy webhook signature
-function verifySignature(rawBody, signature) {
-  if (!process.env.LEMON_WEBHOOK_SECRET) return true; // skip in dev
-  const hmac = crypto.createHmac('sha256', process.env.LEMON_WEBHOOK_SECRET);
-  hmac.update(rawBody);
-  const digest = hmac.digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(signature));
-}
-
-// LemonSqueezy sends raw JSON body — need raw body for signature verification
-router.post('/lemonsqueezy', express.raw({ type: 'application/json' }), async (req, res) => {
-  const signature = req.headers['x-signature'] || '';
-  const rawBody = req.body;
-
-  if (!verifySignature(rawBody, signature)) {
-    console.warn('[webhook] Invalid LemonSqueezy signature');
-    return res.status(401).json({ error: 'Invalid signature' });
-  }
+// Stripe webhook — raw body required for signature verification
+router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
   try {
-    event = JSON.parse(rawBody.toString());
-  } catch (e) {
-    return res.status(400).json({ error: 'Invalid JSON' });
+    if (webhookSecret) {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } else {
+      // Dev mode — no signature verification
+      event = JSON.parse(req.body.toString());
+    }
+  } catch (err) {
+    console.warn('[webhook] Stripe signature verification failed:', err.message);
+    return res.status(400).json({ error: 'Invalid signature' });
   }
 
-  const eventName = event.meta?.event_name;
-  const data = event.data?.attributes;
-  const customData = event.meta?.custom_data || {};
-
-  console.log(`[webhook] LemonSqueezy event: ${eventName}`);
+  console.log(`[webhook] Stripe event: ${event.type}`);
 
   try {
-    switch (eventName) {
-      case 'subscription_created':
-      case 'subscription_resumed':
-      case 'subscription_unpaused': {
-        await handleSubscriptionActive(event, data, customData);
+    switch (event.type) {
+      case 'checkout.session.completed': {
+        const session = event.data.object;
+        if (session.mode === 'subscription') {
+          const tier = session.metadata?.tier;
+          const email = session.customer_email || session.metadata?.email;
+          const agencyId = session.metadata?.agency_id ? parseInt(session.metadata.agency_id) : null;
+          if (tier && (email || agencyId)) {
+            await handleSubscriptionActive(tier, email, agencyId, session.subscription);
+          }
+        }
         break;
       }
 
-      case 'subscription_updated': {
-        // Handle plan changes (upgrade/downgrade)
-        await handleSubscriptionActive(event, data, customData);
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated': {
+        const sub = event.data.object;
+        const priceId = sub.items?.data?.[0]?.price?.id;
+        const tier = getPriceTier(priceId) || sub.metadata?.tier;
+        const agencyId = sub.metadata?.agency_id ? parseInt(sub.metadata.agency_id) : null;
+
+        if (sub.status === 'active' || sub.status === 'trialing') {
+          // Get customer email from Stripe
+          let email = null;
+          if (sub.customer) {
+            try {
+              const customer = await stripe.customers.retrieve(sub.customer);
+              email = customer.email;
+            } catch (e) {
+              console.warn('[webhook] Could not fetch customer:', e.message);
+            }
+          }
+          if (tier) {
+            await handleSubscriptionActive(tier, email, agencyId, sub.id);
+          }
+        } else if (['canceled', 'unpaid', 'past_due', 'incomplete_expired'].includes(sub.status)) {
+          let email = null;
+          if (sub.customer) {
+            try {
+              const customer = await stripe.customers.retrieve(sub.customer);
+              email = customer.email;
+            } catch (e) {}
+          }
+          await handleSubscriptionInactive(email, agencyId);
+        }
         break;
       }
 
-      case 'subscription_cancelled':
-      case 'subscription_expired':
-      case 'subscription_paused': {
-        await handleSubscriptionInactive(data, customData);
+      case 'customer.subscription.deleted': {
+        const sub = event.data.object;
+        const agencyId = sub.metadata?.agency_id ? parseInt(sub.metadata.agency_id) : null;
+        let email = null;
+        if (sub.customer) {
+          try {
+            const stripe2 = require('stripe')(process.env.STRIPE_SECRET_KEY);
+            const customer = await stripe2.customers.retrieve(sub.customer);
+            email = customer.email;
+          } catch (e) {}
+        }
+        await handleSubscriptionInactive(email, agencyId);
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object;
+        console.warn(`[webhook] Payment failed for customer ${invoice.customer}, subscription ${invoice.subscription}`);
+        // Stripe handles retry logic automatically. After final retry fails,
+        // subscription.deleted event fires and we downgrade then.
         break;
       }
 
       default:
-        console.log(`[webhook] Unhandled event: ${eventName}`);
+        console.log(`[webhook] Unhandled event: ${event.type}`);
     }
 
     res.json({ received: true });
@@ -81,25 +117,8 @@ router.post('/lemonsqueezy', express.raw({ type: 'application/json' }), async (r
   }
 });
 
-async function handleSubscriptionActive(event, data, customData) {
-  const variantId = data?.variant_id;
-  const tier = getVariantTier(variantId);
-  if (!tier) {
-    console.warn(`[webhook] Unknown variant ID: ${variantId}`);
-    return;
-  }
-
-  const email = data?.user_email || customData?.email;
-  const agencyId = customData?.agency_id ? parseInt(customData.agency_id) : null;
-  const lsSubscriptionId = event.data?.id;
-  const status = data?.status;
-
-  if (!email && !agencyId) {
-    console.warn('[webhook] No email or agency_id in webhook data');
-    return;
-  }
-
-  // Find or create agency
+async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
+  // Find agency
   let agency;
   if (agencyId) {
     const result = await pool.query('SELECT * FROM agencies WHERE id = $1', [agencyId]);
@@ -129,18 +148,18 @@ async function handleSubscriptionActive(event, data, customData) {
 
   // Update agency tier
   await pool.query(
-    `UPDATE agencies SET 
+    `UPDATE agencies SET
       tier = $1,
       active = true,
-      notes = CONCAT(COALESCE(notes, ''), ' | LS sub:', $2, ' status:', $3)
-    WHERE id = $4`,
-    [tier, lsSubscriptionId, status, agency.id]
+      notes = CONCAT(COALESCE(notes, ''), ' | Stripe sub:', $2)
+    WHERE id = $3`,
+    [tier, subscriptionId || 'unknown', agency.id]
   );
 
-  // Update all active API keys for this agency to new tier limits
+  // Update all active API keys for this agency
   await pool.query(
-    `UPDATE api_keys SET 
-      tier = $1, 
+    `UPDATE api_keys SET
+      tier = $1,
       monthly_limit = $2,
       usage_reset_at = CASE WHEN usage_reset_at < NOW() THEN DATE_TRUNC('month', NOW()) + INTERVAL '1 month' ELSE usage_reset_at END
     WHERE agency_id = $3 AND active = true`,
@@ -150,10 +169,7 @@ async function handleSubscriptionActive(event, data, customData) {
   console.log(`[webhook] Upgraded agency ${agency.id} (${agency.email}) to ${tier}`);
 }
 
-async function handleSubscriptionInactive(data, customData) {
-  const email = data?.user_email || customData?.email;
-  const agencyId = customData?.agency_id ? parseInt(customData.agency_id) : null;
-
+async function handleSubscriptionInactive(email, agencyId) {
   let agency;
   if (agencyId) {
     const result = await pool.query('SELECT * FROM agencies WHERE id = $1', [agencyId]);
@@ -163,21 +179,13 @@ async function handleSubscriptionInactive(data, customData) {
     const result = await pool.query('SELECT * FROM agencies WHERE email = $1', [email]);
     agency = result.rows[0];
   }
-
   if (!agency) return;
 
   // Downgrade to free
-  await pool.query(
-    "UPDATE agencies SET tier = 'free' WHERE id = $1",
-    [agency.id]
-  );
+  await pool.query("UPDATE agencies SET tier = 'free' WHERE id = $1", [agency.id]);
+  await pool.query("UPDATE api_keys SET tier = 'free', monthly_limit = 50 WHERE agency_id = $1 AND active = true", [agency.id]);
 
-  await pool.query(
-    "UPDATE api_keys SET tier = 'free', monthly_limit = 50 WHERE agency_id = $1 AND active = true",
-    [agency.id]
-  );
-
-  console.log(`[webhook] Downgraded agency ${agency.id} (${agency.email}) to free (subscription inactive)`);
+  console.log(`[webhook] Downgraded agency ${agency.id} (${agency.email}) to free`);
 }
 
 module.exports = router;
