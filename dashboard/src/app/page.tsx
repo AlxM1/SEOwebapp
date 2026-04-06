@@ -449,28 +449,36 @@ function AnalyzeSection({ token }: { token: string }) {
   const [aeo, setAeo] = useState<any>(null);
   const [kw, setKw] = useState<any>(null);
   const [error, setError] = useState('');
-  const [tab, setTab] = useState<'seo'|'geo'|'aeo'|'keywords'|'airecs'>('seo');
+  const [tab, setTab] = useState<'seo'|'geo'|'aeo'|'keywords'|'social'|'competitors'|'airecs'>('seo');
   const [aiRecs, setAiRecs] = useState<any>(null);
   const [aiRecsLoading, setAiRecsLoading] = useState(false);
   const [aiRecsError, setAiRecsError] = useState<string|null>(null);
   const [aiRecsUpgrade, setAiRecsUpgrade] = useState(false);
+  const [social, setSocial] = useState<any>(null);
+  const [socialLoading, setSocialLoading] = useState(false);
+  const [socialError, setSocialError] = useState<string|null>(null);
+  const [competitors, setCompetitors] = useState<any>(null);
+  const [competitorsLoading, setCompetitorsLoading] = useState(false);
+  const [competitorsError, setCompetitorsError] = useState<string|null>(null);
 
   const run = async () => {
     if (!url.trim()) return;
-    setLoading(true); setError(''); setSeo(null); setGeo(null); setAeo(null); setKw(null);
+    setLoading(true); setError(''); setSeo(null); setGeo(null); setAeo(null); setKw(null); setSocial(null); setCompetitors(null);
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const body = JSON.stringify({ url: url.trim() });
     try {
-      const [r1, r2, r3, r4] = await Promise.all([
+      const [r1, r2, r3, r4, r5] = await Promise.all([
         fetch(`${API_BASE}/crawl/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/geo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/keywords/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/aeo/score`, { method: 'POST', headers, body }),
+        fetch(`${API_BASE}/social/score`, { method: 'POST', headers, body }),
       ]);
-      const [d1, d2, d3, d4] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json()]);
+      const [d1, d2, d3, d4, d5] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json()]);
       if (!r1.ok) throw new Error(d1.error || 'SEO analysis failed');
       setSeo(d1); setGeo(d2); setKw(d3);
       if (r4.ok) setAeo(d4);
+      if (r5.ok) setSocial(d5);
       setTab('seo');
     } catch (e: any) { setError(e.message || 'Analysis failed'); }
     setLoading(false);
@@ -533,7 +541,7 @@ function AnalyzeSection({ token }: { token: string }) {
 
           {/* Tab nav */}
           <div className="flex gap-1 mb-4 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-1">
-            {(['seo', 'geo', 'aeo', 'keywords', 'airecs'] as const).map(t => (
+            {(['seo', 'geo', 'aeo', 'keywords', 'social', 'competitors', 'airecs'] as const).map(t => (
               <button key={t} onClick={() => {
                 setTab(t);
                 if (t === 'airecs' && !aiRecs && !aiRecsLoading) {
@@ -554,7 +562,7 @@ function AnalyzeSection({ token }: { token: string }) {
                 }
               }}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === t ? 'bg-teal-600 text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                {t === 'geo' ? 'GEO / AI' : t === 'seo' ? 'SEO' : t === 'airecs' ? 'AI Recs' : t === 'aeo' ? 'AEO' : 'Keywords'}
+                {t === 'geo' ? 'GEO / AI' : t === 'seo' ? 'SEO' : t === 'airecs' ? 'AI Recs' : t === 'aeo' ? 'AEO' : t === 'social' ? 'Social' : t === 'competitors' ? 'Rivals' : 'Keywords'}
               </button>
             ))}
           </div>
@@ -806,6 +814,198 @@ function AnalyzeSection({ token }: { token: string }) {
           )}
 
           {/* AI Recs tab */}
+          
+          {/* ─── SOCIAL TAB ─── */}
+          {tab === 'social' && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">Social Media Presence</h3>
+              {!social && !socialLoading && (
+                <p className="text-[var(--text-muted)] text-sm">Social media analysis runs automatically with the main analysis.</p>
+              )}
+              {socialLoading && (
+                <div className="flex items-center gap-3 py-8 justify-center text-[var(--text-secondary)] text-sm">
+                  <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                  Analyzing social presence...
+                </div>
+              )}
+              {socialError && <p className="text-red-400 text-sm">{socialError}</p>}
+              {social && (
+                <div className="space-y-4">
+                  {/* Overall score */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <ScoreRing score={social.overallScore} color={social.overallScore >= 70 ? '#10b981' : social.overallScore >= 40 ? '#f59e0b' : '#ef4444'} size={72} />
+                    <div>
+                      <p className="text-lg font-bold">Grade {social.grade}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{social.linksFound}/{social.totalPlatforms} platforms detected</p>
+                    </div>
+                  </div>
+                  
+                  {/* Platform grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {social.platforms && Object.entries(social.platforms).map(([platform, data]: [string, any]) => (
+                      <div key={platform} className={`border rounded-lg p-3 ${data.found ? 'border-teal-800 bg-teal-950/20' : 'border-[var(--border-primary)] bg-[var(--bg-secondary)]'}`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium capitalize">{platform === 'twitter' ? 'X (Twitter)' : platform}</span>
+                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-green-400' : data.score >= 30 ? 'text-yellow-400' : 'text-red-400'}`}>{data.score}/100</span>
+                        </div>
+                        <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden mb-1">
+                          <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-green-500' : data.score >= 30 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{width: `${data.score}%`}} />
+                        </div>
+                        <p className="text-xs text-[var(--text-muted)]">{data.notes}</p>
+                        {data.url && <a href={data.url} target="_blank" rel="noopener" className="text-xs text-teal-400 hover:underline mt-1 block truncate">{data.url}</a>}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Social Meta Tags */}
+                  {social.socialMetaTags && (
+                    <div className="border border-[var(--border-primary)] rounded-lg p-3 mt-3">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Social Meta Tags</p>
+                      <div className="flex gap-3">
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Recommendations */}
+                  {social.recommendations && social.recommendations.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Recommendations</p>
+                      <div className="space-y-2">
+                        {social.recommendations.map((rec: any, i: number) => (
+                          <div key={i} className="border border-[var(--border-primary)] rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-red-950 text-red-400' : rec.priority === 'medium' ? 'bg-yellow-950 text-yellow-400' : 'bg-green-950 text-green-400'}`}>{rec.priority}</span>
+                              <span className="text-xs font-medium capitalize">{rec.platform}</span>
+                            </div>
+                            <p className="text-xs text-[var(--text-muted)]">{rec.recommendation}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {social.summary && (
+                    <p className="text-xs text-[var(--text-muted)] mt-3 italic">{social.summary}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── COMPETITORS TAB ─── */}
+          {tab === 'competitors' && (
+            <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl p-5">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">Competitor Analysis</h3>
+              {!competitors && !competitorsLoading && (
+                <div className="text-center py-8">
+                  <p className="text-[var(--text-muted)] text-sm mb-3">Discover how you stack up against your top 5 local competitors.</p>
+                  <button
+                    onClick={() => {
+                      setCompetitorsLoading(true);
+                      setCompetitorsError(null);
+                      fetch(`${API_BASE}/competitors/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ url: seo?.url || url, seo, geo, aeo }),
+                      }).then(async r => {
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.error || 'Analysis failed');
+                        setCompetitors(d);
+                        setCompetitorsLoading(false);
+                      }).catch(e => { setCompetitorsError(e.message); setCompetitorsLoading(false); });
+                    }}
+                    className="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Run Competitor Analysis
+                  </button>
+                </div>
+              )}
+              {competitorsLoading && (
+                <div className="flex flex-col items-center gap-3 py-8 text-[var(--text-secondary)] text-sm">
+                  <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                  <p>Analyzing competitors... This may take 30-60 seconds.</p>
+                  <p className="text-xs text-[var(--text-muted)]">Scoring each competitor across SEO, GEO, and AEO</p>
+                </div>
+              )}
+              {competitorsError && <p className="text-red-400 text-sm">{competitorsError}</p>}
+              {competitors && (
+                <div className="space-y-4">
+                  {/* Business info */}
+                  {competitors.business && (
+                    <div className="border border-[var(--border-primary)] rounded-lg p-3 mb-3">
+                      <p className="text-sm font-medium">{competitors.business.name}</p>
+                      <p className="text-xs text-[var(--text-muted)]">{competitors.business.industry} &mdash; {competitors.business.location}</p>
+                    </div>
+                  )}
+
+                  {/* Score comparison table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-[var(--border-primary)]">
+                          <th className="text-left py-2 text-[var(--text-muted)] font-medium">Business</th>
+                          <th className="text-center py-2 text-[var(--text-muted)] font-medium">SEO</th>
+                          <th className="text-center py-2 text-[var(--text-muted)] font-medium">GEO</th>
+                          <th className="text-center py-2 text-[var(--text-muted)] font-medium">AEO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {/* Your scores */}
+                        <tr className="border-b border-[var(--border-primary)] bg-teal-950/20">
+                          <td className="py-2 font-medium text-teal-400">You ({seo?.url?.replace(/https?:\/\//, '').split('/')[0]})</td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.seo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.seo || 0}</span></td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.geo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.geo || 0}</span></td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.aeo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.aeo || 0}</span></td>
+                        </tr>
+                        {/* Competitors */}
+                        {competitors.competitors?.map((c: any, i: number) => (
+                          <tr key={i} className="border-b border-[var(--border-primary)]">
+                            <td className="py-2">
+                              <p className="font-medium">{c.name}</p>
+                              <a href={c.url} target="_blank" rel="noopener" className="text-teal-400 hover:underline truncate block max-w-[200px]">{c.url?.replace(/https?:\/\//, '')}</a>
+                            </td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.seo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.geo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* SWOT Insights */}
+                  {competitors.insights && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                      <div className="border border-green-800 rounded-lg p-3 bg-green-950/20">
+                        <p className="text-xs font-semibold text-green-400 uppercase mb-2">Strengths</p>
+                        <ul className="space-y-1">{competitors.insights.strengths?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
+                      </div>
+                      <div className="border border-red-800 rounded-lg p-3 bg-red-950/20">
+                        <p className="text-xs font-semibold text-red-400 uppercase mb-2">Weaknesses</p>
+                        <ul className="space-y-1">{competitors.insights.weaknesses?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
+                      </div>
+                      <div className="border border-blue-800 rounded-lg p-3 bg-blue-950/20">
+                        <p className="text-xs font-semibold text-blue-400 uppercase mb-2">Opportunities</p>
+                        <ul className="space-y-1">{competitors.insights.opportunities?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
+                      </div>
+                      <div className="border border-orange-800 rounded-lg p-3 bg-orange-950/20">
+                        <p className="text-xs font-semibold text-orange-400 uppercase mb-2">Threats</p>
+                        <ul className="space-y-1">{competitors.insights.threats?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {competitors.insights?.summary && (
+                    <p className="text-xs text-[var(--text-muted)] mt-3 italic">{competitors.insights.summary}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {tab === 'airecs' && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
               {aiRecsLoading && (

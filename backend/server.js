@@ -17,6 +17,8 @@ const quickbooksRoutes = require('./routes/quickbooks');
 
 const authRoutes = require('./routes/auth');
 const aiRecsRoutes = require('./routes/ai-recommendations');
+const competitorRoutes = require('./routes/competitor-analysis');
+const socialRoutes = require('./routes/social-scoring');
 const stripeWebhooks = require('./routes/stripe-webhooks');
 const analysisRoutes = require('./routes/analysis');
 const analyticsRoutes = require('./routes/analytics');
@@ -76,6 +78,8 @@ app.use(apiKeyMiddleware);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/ai-recommendations', aiRecsRoutes);
+app.use('/api/competitors', competitorRoutes);
+app.use('/api/social', socialRoutes);
 app.use('/api/webhooks', stripeWebhooks);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/analytics', analyticsRoutes);
