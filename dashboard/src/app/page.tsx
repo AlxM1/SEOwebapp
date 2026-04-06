@@ -441,7 +441,7 @@ function ScoreRing({ score, max = 100, color = '#14b8a6', size = 80 }: { score: 
   );
 }
 
-function AnalyzeSection({ token }: { token: string }) {
+function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?: string }) {
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [seo, setSeo] = useState<any>(null);
@@ -1374,7 +1374,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {section === 'analyze' && <AnalyzeSection token={token} />}
+      {section === 'analyze' && <AnalyzeSection token={token} userTier={agency?.tier || "free"} />}
 
       {section === 'features' && (
         <FeaturesSection
