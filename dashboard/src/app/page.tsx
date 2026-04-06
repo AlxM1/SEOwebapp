@@ -473,19 +473,17 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
         fetch(`${API_BASE}/keywords/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/aeo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/social/score`, { method: 'POST', headers, body }),
-        fetch(`${API_BASE}/competitors/analyze`, { method: 'POST', headers, body: JSON.stringify({ url, seo: seo || {}, geo: geo || {}, aeo: aeo || {} }) }),
         fetch(`${API_BASE}/ai-recommendations/analyze`, { method: 'POST', headers, body: JSON.stringify({ url: seo?.url || url, seo: seo || {}, geo: geo || {} }) }),
       ]);
       const getR = (i: number) => settled[i].status === 'fulfilled' ? (settled[i] as PromiseFulfilledResult<Response>).value : null;
-      const [r1, r2, r3, r4, r5, r6, r7] = [0,1,2,3,4,5,6].map(getR) as Response[];
+      const [r1, r2, r3, r4, r5, r6] = [0,1,2,3,4,5].map(getR) as Response[];
       const safeJson = async (r: Response | null) => { if (!r) return null; try { return await r.json(); } catch { return null; } };
-      const [d1, d2, d3, d4, d5, d6, d7] = await Promise.all([safeJson(r1), safeJson(r2), safeJson(r3), safeJson(r4), safeJson(r5), safeJson(r6), safeJson(r7)]);
+      const [d1, d2, d3, d4, d5, d6] = await Promise.all([safeJson(r1), safeJson(r2), safeJson(r3), safeJson(r4), safeJson(r5), safeJson(r6)]);
       if (!r1.ok) throw new Error(d1.error || 'SEO analysis failed');
       setSeo(d1); setGeo(d2); setKw(d3);
       if (r4?.ok) setAeo(d4);
       if (r5?.ok) setSocial(d5);
-      if (r6?.ok) setCompetitors(d6);
-      if (r7?.ok) setAiRecs(d7);
+      if (r6?.ok) setAiRecs(d6);
       setTab('seo');
     } catch (e: any) { setError(e.message || 'Analysis failed'); }
     setLoading(false);
@@ -783,7 +781,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {tab === 'aeo' && aeo && userTier === 'agency' && aeo.breakdown && (
             <div className="mt-4 space-y-3">
               <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — Score Breakdown</p>
-              {(Object.entries(aeo.breakdown) as [string, number][]).map(([key, score]) => {
+              {aeo.breakdown && (Object.entries(aeo.breakdown) as [string, number][]).map(([key, score]) => {
                 const info: Record<string, {title:string;what:string;why:string;fix:string;impact:string}> = {
                   directAnswerBlocks:{title:"Direct Answer Blocks",what:"How well your content directly answers questions AI engines look for — clear Q&A patterns, definitions, answer-first formatting.",why:"AI engines like ChatGPT and Perplexity pull from pages that answer questions clearly. Buried answers get skipped entirely.",fix:"Add an FAQ section. Start paragraphs with the answer first. Use definition sentences. Target question-based keywords.",impact:"Sites that answer directly get cited in AI Overviews 3-5x more often — free visibility to users who never click a link."},
                   qaStructure:{title:"Q&A Structure",what:"Whether your content uses explicit Q&A formatting — FAQ sections, question-based headings with immediate answers below.",why:"Google PAA boxes, featured snippets, and AI engines all harvest Q&A content. Without structure, your expertise is invisible.",fix:"Add FAQ sections to every key page. Use H2/H3 headings as questions. Add FAQ JSON-LD schema. Keep answers under 50 words.",impact:"FAQ schema unlocks People Also Ask boxes — appearing on 43% of all Google searches at zero extra cost."},
@@ -935,7 +933,26 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
               <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">Competitor Analysis</h3>
               {!competitors && !competitorsLoading && !competitorsError && (
                 <div className="text-center py-8">
-                  <p className="text-[var(--text-muted)] text-sm">Competitor analysis running automatically...</p>
+                  <p className="text-[var(--text-muted)] text-sm mb-3">Competitor analysis takes 30-60 seconds — scores each rival across SEO, GEO & AEO.</p>
+                  <button
+                    onClick={() => {
+                      setCompetitorsLoading(true);
+                      setCompetitorsError(null);
+                      fetch(`${API_BASE}/competitors/analyze`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                        body: JSON.stringify({ url: seo?.url || url, seo, geo, aeo }),
+                      }).then(async r => {
+                        const d = await r.json();
+                        if (!r.ok) throw new Error(d.error || 'Analysis failed');
+                        setCompetitors(d);
+                        setCompetitorsLoading(false);
+                      }).catch(e => { setCompetitorsError(e.message); setCompetitorsLoading(false); });
+                    }}
+                    className="bg-teal-600 hover:bg-teal-700 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Run Competitor Analysis
+                  </button>
                 </div>
               )}
               {competitorsLoading && (
