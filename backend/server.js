@@ -9,12 +9,15 @@ const currentDir = path.dirname(require.main.filename);
 
 const { apiKeyMiddleware } = require('./middleware/apiKey');
 const adminSaasRoutes = require('./routes/admin-saas');
-const accountRoutes = require('./routes/account');
+const accountRoutes = require("./routes/account");
+const featuresRoutes = require("./routes/features");
 const webhookRoutes = require('./routes/webhooks');
 const billingRoutes = require('./routes/billing');
 const quickbooksRoutes = require('./routes/quickbooks');
 
 const authRoutes = require('./routes/auth');
+const aiRecsRoutes = require('./routes/ai-recommendations');
+const stripeWebhooks = require('./routes/stripe-webhooks');
 const analysisRoutes = require('./routes/analysis');
 const analyticsRoutes = require('./routes/analytics');
 const adminRoutes = require('./routes/admin');
@@ -72,6 +75,8 @@ app.use(apiKeyMiddleware);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/ai-recommendations', aiRecsRoutes);
+app.use('/api/webhooks', stripeWebhooks);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
@@ -89,6 +94,7 @@ app.use('/api/monitor', monitorRoutes);
 app.use('/api/schema', schemaRoutes);
 app.use('/api/admin-saas', adminSaasRoutes);
 app.use('/api/account', accountRoutes);
+app.use('/api/account', featuresRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/quickbooks', quickbooksRoutes);
 

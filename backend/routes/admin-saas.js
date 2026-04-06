@@ -113,4 +113,79 @@ router.get('/stats', adminAuth, async (req, res) => {
   });
 });
 
+// ── POST /api/admin-saas/notify-feature-update ──────────────────────────────
+// Send a feature notification email to a specific agency.
+// Auth: x-admin-token header (same as all admin-saas endpoints).
+// Payload: { agency_id: number, feature_ids: string[], tier: string }
+// Logs the notification in feature_notifications table.
+router.post('/notify-feature-update', adminAuth, async (req, res) => {
+  const { agency_id, feature_ids, tier } = req.body;
+
+  if (!agency_id || !feature_ids || !Array.isArray(feature_ids) || feature_ids.length === 0 || !tier) {
+    return res.status(400).json({
+      error: 'agency_id, feature_ids (non-empty array), and tier are required',
+    });
+  }
+
+  try {
+    // Validate agency exists
+    const agencyResult = await pool.query(
+      'SELECT id, name, email FROM agencies WHERE id = $1',
+      [agency_id]
+    );
+    if (!agencyResult.rows.length) {
+      return res.status(404).json({ error: `Agency ${agency_id} not found` });
+    }
+    const agency = agencyResult.rows[0];
+
+    // Send email (never throws — returns { sent, error })
+    const { sendFeatureNotification } = require('../services/email');
+    const emailResult = await sendFeatureNotification(agency_id, feature_ids, tier);
+
+    // Log to feature_notifications
+    const { rows: logRow } = await pool.query(
+      `INSERT INTO feature_notifications
+         (agency_id, tier, feature_ids, email_sent, email_error, triggered_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        agency_id,
+        tier,
+        feature_ids,
+        emailResult.sent,
+        emailResult.error || null,
+        'admin-api',
+      ]
+    );
+
+    const logId = logRow[0].id;
+
+    if (!emailResult.sent) {
+      // Email failed but we still log — return 207 partial success
+      return res.status(207).json({
+        ok: false,
+        notification_id: logId,
+        agency: { id: agency.id, name: agency.name, email: agency.email },
+        email_sent: false,
+        email_error: emailResult.error,
+        message: 'Notification logged but email delivery failed — check transport config',
+      });
+    }
+
+    return res.json({
+      ok: true,
+      notification_id: logId,
+      agency: { id: agency.id, name: agency.name, email: agency.email },
+      email_sent: true,
+      message_id: emailResult.messageId,
+      message: 'Feature notification sent successfully',
+    });
+
+  } catch (err) {
+    console.error('[notify-feature-update] Error:', err.message);
+    res.status(500).json({ error: 'Failed to send feature notification', detail: err.message });
+  }
+});
+
 module.exports = router;
+

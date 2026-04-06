@@ -1,4 +1,38 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-body { background: #0a0a0a; color: #fff; font-family: -apple-system, sans-serif; }
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #0a0a0a;
+  --bg-input: #0a0a0a;
+  --border-primary: #1a1a1a;
+  --border-secondary: #2a2a2a;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --accent: #0d9488;
+  --accent-hover: #0f766e;
+}
+
+.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #f3f4f6;
+  --border-primary: #e5e7eb;
+  --border-secondary: #d1d5db;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --accent: #0d9488;
+  --accent-hover: #0f766e;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, sans-serif;
+  transition: background 0.2s, color 0.2s;
+}

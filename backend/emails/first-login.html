@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your SEOh Dashboard is Ready</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #18181b;
+    }
+    .wrapper {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .header {
+      background: #14b8a6;
+      padding: 36px 40px 32px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+    .header p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.85);
+    }
+    .body {
+      padding: 40px;
+    }
+    .body p {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #3f3f46;
+      margin: 0 0 20px;
+    }
+    .tier-badge {
+      display: inline-block;
+      background: #f0fdf9;
+      color: #0d9488;
+      border: 1px solid #99f6e4;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .cta-block {
+      text-align: center;
+      margin: 32px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background: #14b8a6;
+      color: #ffffff !important;
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 32px;
+      border-radius: 8px;
+      letter-spacing: -0.2px;
+    }
+    .expiry-note {
+      font-size: 13px;
+      color: #71717a;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .divider {
+      border: none;
+      border-top: 1px solid #f1f1f1;
+      margin: 32px 0;
+    }
+    .footer {
+      background: #fafafa;
+      border-top: 1px solid #f1f1f1;
+      padding: 24px 40px;
+      text-align: center;
+    }
+    .footer p {
+      font-size: 12px;
+      color: #a1a1aa;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .footer a {
+      color: #14b8a6;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>SEOh!</h1>
+      <p>Your dashboard is ready to go</p>
+    </div>
+
+    <div class="body">
+      <p>Hi {{EMAIL}},</p>
+
+      <p>Payment confirmed. Your account is live.</p>
+
+      <div>
+        <span class="tier-badge">{{TIER_NAME}} Plan</span>
+      </div>
+
+      <p>
+        You're one step away from accessing your dashboard. Set your password using the button below — this link is valid for <strong>24 hours</strong>.
+      </p>
+
+      <div class="cta-block">
+        <a href="{{RESET_URL}}" class="cta-button">Set Your Password</a>
+        <p class="expiry-note">Link expires in 24 hours</p>
+      </div>
+
+      <hr class="divider" />
+
+      <p style="font-size:13px; color:#71717a;">
+        If the button doesn't work, copy and paste this URL into your browser:<br />
+        <a href="{{RESET_URL}}" style="color:#14b8a6; word-break:break-all;">{{RESET_URL}}</a>
+      </p>
+
+      <p style="font-size:13px; color:#71717a;">
+        If you didn't create this account, contact us at
+        <a href="mailto:contact@seoh.ca" style="color:#14b8a6;">contact@seoh.ca</a>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p>
+        &copy; 2025 SEOh! &nbsp;&middot;&nbsp;
+        <a href="{{APP_URL}}">app.seoh.ca</a> &nbsp;&middot;&nbsp;
+        Questions? <a href="mailto:contact@seoh.ca">contact@seoh.ca</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

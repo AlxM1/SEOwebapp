@@ -13,7 +13,12 @@ const GROK_MODEL = process.env.GROK_MODEL || 'grok-3-mini';
 router.post('/analyze', async (req, res) => {
   // Tier check — require Starter or above
   const apiKey = req.headers['x-api-key'] || req.headers['X-Api-Key'];
-  if (apiKey) {
+  
+  // Also accept Bearer token (from dashboard)
+  const authHeader = req.headers['authorization'];
+  if (!apiKey && authHeader && authHeader.startsWith('Bearer ')) {
+    // Dashboard user - skip tier check for now (dashboard handles tier display)
+  } else if (apiKey) {
     try {
       const tierResult = await pool.query(
         `SELECT a.tier FROM agencies a

@@ -1,6 +1,7 @@
 const express = require('express');
 const { pool } = require('../db');
 const { syncToQuickBooks } = require('../services/quickbooks');
+const { createAccountFromCheckout } = require('../services/account-creation');
 
 const router = express.Router();
 
@@ -12,6 +13,20 @@ function getPriceTier(priceId) {
     [process.env.STRIPE_PRICE_AGENCY]: 'agency',
   };
   return map[priceId] || null;
+}
+
+// ── Log webhook event to DB (audit trail) ─────────────────────────────────────
+async function logWebhookEvent(eventType, stripeEventId, payload, error) {
+  try {
+    await pool.query(
+      `INSERT INTO webhook_events (event_type, stripe_event_id, payload, error)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (stripe_event_id) DO NOTHING`,
+      [eventType, stripeEventId, JSON.stringify(payload), error || null]
+    );
+  } catch (e) {
+    console.error('[webhook] Failed to log webhook event:', e.message);
+  }
 }
 
 // Stripe webhook — raw body required for signature verification
@@ -33,37 +48,89 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     return res.status(400).json({ error: 'Invalid signature' });
   }
 
-  console.log(`[webhook] Stripe event: ${event.type}`);
+  console.log(`[webhook] Stripe event: ${event.type} (${event.id})`);
+
+  // Log every event for audit trail — idempotent via ON CONFLICT
+  await logWebhookEvent(event.type, event.id, event.data.object, null);
 
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        if (session.mode === 'subscription') {
-          // Retrieve subscription to get the price ID (authoritative tier source)
-          let tier = null;
-          if (session.subscription) {
-            try {
-              const sub = await stripe.subscriptions.retrieve(session.subscription);
-              const priceId = sub.items?.data?.[0]?.price?.id;
-              tier = getPriceTier(priceId);
-            } catch (e) {
-              console.warn('[webhook] Could not retrieve subscription for tier resolution:', e.message);
-            }
-          }
-          // Fallback to metadata only if price lookup fails
-          if (!tier) tier = session.metadata?.tier;
-          // Validate tier is a known value
-          if (tier && !['starter', 'pro', 'agency'].includes(tier)) {
-            console.warn(`[webhook] Invalid tier from metadata: ${tier}`);
-            tier = null;
-          }
-          const email = session.customer_email || session.metadata?.email;
-          const agencyId = session.metadata?.agency_id ? parseInt(session.metadata.agency_id) : null;
-          if (tier && (email || agencyId)) {
-            await handleSubscriptionActive(tier, email, agencyId, session.subscription);
+
+        // ── Resolve tier ────────────────────────────────────────────────────
+        let tier = null;
+
+        if (session.mode === 'subscription' && session.subscription) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(session.subscription);
+            const priceId = sub.items?.data?.[0]?.price?.id;
+            tier = getPriceTier(priceId);
+          } catch (e) {
+            console.warn('[webhook] Could not retrieve subscription for tier resolution:', e.message);
           }
         }
+
+        // Fallback: metadata.tier (works for one-time payments too)
+        if (!tier) tier = session.metadata?.tier;
+
+        // Validate
+        if (tier && !['starter', 'pro', 'agency'].includes(tier)) {
+          console.warn(`[webhook] Invalid tier from metadata: ${tier}`);
+          tier = null;
+        }
+
+        const email = session.customer_email
+          || session.customer_details?.email
+          || session.metadata?.email;
+
+        const agencyId = session.metadata?.agency_id
+          ? parseInt(session.metadata.agency_id)
+          : null;
+
+        // ── Account auto-creation (new customers) ───────────────────────────
+        if (email && tier) {
+          let accountResult = null;
+          let accountError  = null;
+
+          try {
+            accountResult = await createAccountFromCheckout(email, tier);
+            console.log(`[webhook] Account created/verified for ${email}: userId=${accountResult.userId}, agencyId=${accountResult.agencyId}`);
+          } catch (accErr) {
+            accountError = accErr.message;
+            console.error(`[webhook] Account creation failed for ${email}:`, accErr.message);
+            // Update webhook log with error — then return 202 (acknowledged, not processed)
+            await logWebhookEvent(event.type, event.id + '_acct_err', { email, tier, error: accErr.message }, accErr.message);
+            // Still return 200 to Stripe — don't let Stripe retry indefinitely for account errors
+          }
+
+          if (accountError) {
+            // Admin alert (async, best-effort)
+            try {
+              await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  from: process.env.EMAIL_FROM || 'SEOh! <noreply@seoh.ca>',
+                  to: ['contact@seoh.ca'],
+                  subject: `[SEOh] Account creation failed: ${email}`,
+                  html: `<p>Account auto-creation failed for <strong>${email}</strong> (tier: ${tier}).</p><p>Error: ${accountError}</p><p>Stripe event: ${event.id}</p><p>Manual intervention required.</p>`,
+                }),
+              });
+            } catch (alertErr) {
+              console.error('[webhook] Admin alert failed:', alertErr.message);
+            }
+          }
+        }
+
+        // ── Subscription tier upgrade (existing agency) ─────────────────────
+        if (session.mode === 'subscription' && (email || agencyId) && tier) {
+          await handleSubscriptionActive(tier, email, agencyId, session.subscription);
+        }
+
         break;
       }
 
@@ -75,7 +142,6 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         const agencyId = sub.metadata?.agency_id ? parseInt(sub.metadata.agency_id) : null;
 
         if (sub.status === 'active' || sub.status === 'trialing') {
-          // Get customer email from Stripe
           let email = null;
           if (sub.customer) {
             try {
@@ -107,14 +173,13 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         let email = null;
         if (sub.customer) {
           try {
-            const stripe2 = require('stripe')(process.env.STRIPE_SECRET_KEY);
-            const customer = await stripe2.customers.retrieve(sub.customer);
+            const customer = await stripe.customers.retrieve(sub.customer);
             email = customer.email;
           } catch (e) {}
         }
         await handleSubscriptionInactive(email, agencyId);
 
-        // QB: log cancellation as a journal note via sync log metadata
+        // QB: log cancellation
         const cancelId = `cancel_${sub.id}_${Date.now()}`;
         syncToQuickBooks({
           id: cancelId,
@@ -135,7 +200,6 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
       case 'invoice.payment_succeeded': {
         const invoice = event.data.object;
         console.log(`[webhook] Payment succeeded for invoice ${invoice.id}, customer ${invoice.customer}`);
-        // Async QB sync — don't block webhook response
         syncToQuickBooks(invoice).catch(err =>
           console.error('[webhook] QB sync failed:', err.message)
         );
@@ -145,8 +209,6 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
       case 'invoice.payment_failed': {
         const invoice = event.data.object;
         console.warn(`[webhook] Payment failed for customer ${invoice.customer}, subscription ${invoice.subscription}`);
-        // Stripe handles retry logic automatically. After final retry fails,
-        // subscription.deleted event fires and we downgrade then.
         break;
       }
 
@@ -157,12 +219,13 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     res.json({ received: true });
   } catch (error) {
     console.error('[webhook] Error processing event:', error);
-    res.status(500).json({ error: 'Processing failed' });
+    // Always return 200 to Stripe — avoid infinite retries
+    res.json({ received: true, warning: 'Processing error logged' });
   }
 });
 
+// ── handleSubscriptionActive ──────────────────────────────────────────────────
 async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
-  // Find agency
   let agency;
   if (agencyId) {
     const result = await pool.query('SELECT * FROM agencies WHERE id = $1', [agencyId]);
@@ -173,7 +236,6 @@ async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
     agency = result.rows[0];
   }
   if (!agency && email) {
-    // Auto-create agency for new paying customer
     const result = await pool.query(
       'INSERT INTO agencies (name, email, tier) VALUES ($1, $2, $3) RETURNING *',
       [email.split('@')[0], email, tier]
@@ -186,11 +248,9 @@ async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
     return;
   }
 
-  // Get tier limits
   const tierLimits = await pool.query('SELECT monthly_analyses FROM tier_limits WHERE tier = $1', [tier]);
   const monthlyLimit = tierLimits.rows[0]?.monthly_analyses || 50;
 
-  // Update agency tier
   await pool.query(
     `UPDATE agencies SET
       tier = $1,
@@ -200,7 +260,6 @@ async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
     [tier, subscriptionId || 'unknown', agency.id]
   );
 
-  // Update all active API keys for this agency
   await pool.query(
     `UPDATE api_keys SET
       tier = $1,
@@ -213,6 +272,7 @@ async function handleSubscriptionActive(tier, email, agencyId, subscriptionId) {
   console.log(`[webhook] Upgraded agency ${agency.id} (${agency.email}) to ${tier}`);
 }
 
+// ── handleSubscriptionInactive ────────────────────────────────────────────────
 async function handleSubscriptionInactive(email, agencyId) {
   let agency;
   if (agencyId) {
@@ -225,7 +285,6 @@ async function handleSubscriptionInactive(email, agencyId) {
   }
   if (!agency) return;
 
-  // Downgrade to free
   await pool.query("UPDATE agencies SET tier = 'free' WHERE id = $1", [agency.id]);
   await pool.query("UPDATE api_keys SET tier = 'free', monthly_limit = 50 WHERE agency_id = $1 AND active = true", [agency.id]);
 
