@@ -13,24 +13,23 @@
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
   --accent: #0d9488;
-  --ring-track: #2a2a2a;
   --accent-hover: #0f766e;
+  --ring-track: #2a2a2a;
 }
 
 .light {
-  --bg-primary: #ffffff;
-  --ring-track: #d1d5db;
-  --bg-secondary: #f9fafb;
+  --bg-primary: #f8fafc;
+  --bg-secondary: #f1f5f9;
   --bg-card: #ffffff;
-  --bg-input: #f3f4f6;
-  --border-primary: #e5e7eb;
-  --border-secondary: #d1d5db;
-  --text-primary: #111827;
-  --text-secondary: #4b5563;
-  --text-muted: #6b7280;
+  --bg-input: #f1f5f9;
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
   --accent: #0d9488;
-  --ring-track: #2a2a2a;
   --accent-hover: #0f766e;
+  --ring-track: #cbd5e1;
 }
 
 body {

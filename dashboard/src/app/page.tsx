@@ -124,7 +124,7 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">cURL Example</h3>
               <div className="relative">
-                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-gray-300 overflow-x-auto whitespace-pre-wrap">{curlWithKey}</pre>
+                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-[var(--text-secondary)] overflow-x-auto whitespace-pre-wrap">{curlWithKey}</pre>
                 <button onClick={() => copy(curlWithKey, 'curl-modal')}
                   className="absolute top-2 right-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
                   {copied === 'curl-modal' ? 'Copied!' : 'Copy'}
@@ -138,7 +138,7 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Request Body</h3>
               <div className="relative">
-                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-gray-300 overflow-x-auto">
+                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-[var(--text-secondary)] overflow-x-auto">
                   {JSON.stringify(feature.request_example, null, 2)}
                 </pre>
                 <button onClick={() => copy(JSON.stringify(feature.request_example, null, 2), 'req')}
@@ -154,7 +154,7 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Response Example</h3>
               <div className="relative">
-                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-gray-300 overflow-x-auto">
+                <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 text-xs font-mono text-[var(--text-secondary)] overflow-x-auto">
                   {JSON.stringify(feature.response_example, null, 2)}
                 </pre>
                 <button onClick={() => copy(JSON.stringify(feature.response_example, null, 2), 'res')}
@@ -463,7 +463,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
 
   const run = async () => {
     if (!url.trim()) return;
-    setLoading(true); setError(''); setSeo(null); setGeo(null); setAeo(null); setKw(null); setSocial(null); setCompetitors(null);
+    setLoading(true); setError(''); setSeo(null); setGeo(null); setAeo(null); setKw(null); setSocial(null); setCompetitors(null); setAiRecs(null); setAiRecsError(null);
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const body = JSON.stringify({ url: url.trim() });
     try {
@@ -473,7 +473,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
         fetch(`${API_BASE}/keywords/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/aeo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/social/score`, { method: 'POST', headers, body }),
-        fetch(`${API_BASE}/ai-recommendations/analyze`, { method: 'POST', headers, body: JSON.stringify({ url: seo?.url || url, seo: seo || {}, geo: geo || {} }) }),
+        fetch(`${API_BASE}/ai-recommendations/analyze`, { method: 'POST', headers, body }),
       ]);
       const getR = (i: number) => settled[i].status === 'fulfilled' ? (settled[i] as PromiseFulfilledResult<Response>).value : null;
       const [r1, r2, r3, r4, r5, r6] = [0,1,2,3,4,5].map(getR) as Response[];
@@ -619,7 +619,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                       {seo.images.withoutAlt > 0 && <span className="text-amber-400">{seo.images.withoutAlt} missing alt</span>}
                     </div>
                   </div>
-                  <div className="bg-gray-800 rounded-full h-1.5">
+                  <div className="bg-[var(--bg-secondary)] rounded-full h-1.5">
                     <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: `${(seo.images.withAlt / Math.max(1, seo.images.total)) * 100}%` }} />
                   </div>
                 </div>
@@ -680,7 +680,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                           <span className="text-[var(--text-secondary)]">{label}</span>
                           <span className="font-mono" style={{ color: col }}>{val.score}/{val.max}</span>
                         </div>
-                        <div className="bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-[var(--bg-secondary)] rounded-full h-1.5">
                           <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: col }} />
                         </div>
                       </div>
@@ -713,7 +713,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3">Recommendations to Improve AI Visibility</h3>
                   <ul className="space-y-2">
                     {geo.recommendations.map((r: string, i: number) => (
-                      <li key={i} className="text-sm text-gray-300 flex gap-2">
+                      <li key={i} className="text-sm text-[var(--text-muted)] flex gap-2">
                         <span className="text-teal-400 shrink-0 mt-0.5">→</span>{r}
                       </li>
                     ))}
@@ -755,7 +755,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                               <span className="text-[var(--text-secondary)]">{label}</span>
                               <span className="font-mono" style={{ color: col }}>{val.score}/{val.max}</span>
                             </div>
-                            <div className="bg-gray-800 rounded-full h-1.5">
+                            <div className="bg-[var(--bg-secondary)] rounded-full h-1.5">
                               <div className="h-1.5 rounded-full" style={{ width: `${pct}%`, backgroundColor: col }} />
                             </div>
                           </div>
@@ -769,7 +769,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                       <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3">Recommendations to Improve AEO</h3>
                       <ul className="space-y-2">
                         {aeo.recommendations.map((r: string, i: number) => (
-                          <li key={i} className="text-sm text-gray-300 flex gap-2">
+                          <li key={i} className="text-sm text-[var(--text-muted)] flex gap-2">
                             <span className="text-teal-400 shrink-0 mt-0.5">→</span>{r}
                           </li>
                         ))}
@@ -1456,7 +1456,7 @@ export default function Dashboard() {
               <div key={ex.label} className="mb-3">
                 <p className="text-xs text-[var(--text-muted)] mb-1">{ex.label}</p>
                 <div className="relative">
-                  <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-3 text-xs font-mono text-gray-300 overflow-x-auto">{ex.code}</pre>
+                  <pre className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-3 text-xs font-mono text-[var(--text-secondary)] overflow-x-auto">{ex.code}</pre>
                   <button onClick={() => copy(ex.code, ex.label)} className="absolute top-2 right-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)]">
                     {copied === ex.label ? 'Copied!' : 'Copy'}
                   </button>
