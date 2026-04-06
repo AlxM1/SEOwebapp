@@ -776,6 +776,48 @@ function AnalyzeSection({ token }: { token: string }) {
             </div>
           )}
 
+          {/* Agency AEO Breakdown */}
+          {tab === 'aeo' && aeo && account?.agency?.tier === 'agency' && aeo.breakdown && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — Score Breakdown</p>
+              {(Object.entries(aeo.breakdown) as [string, number][]).map(([key, score]) => {
+                const info: Record<string, {title:string;what:string;why:string;fix:string;impact:string}> = {
+                  directAnswerBlocks:{title:"Direct Answer Blocks",what:"How well your content directly answers questions AI engines look for — clear Q&A patterns, definitions, answer-first formatting.",why:"AI engines like ChatGPT and Perplexity pull from pages that answer questions clearly. Buried answers get skipped entirely.",fix:"Add an FAQ section. Start paragraphs with the answer first. Use definition sentences. Target question-based keywords.",impact:"Sites that answer directly get cited in AI Overviews 3-5x more often — free visibility to users who never click a link."},
+                  qaStructure:{title:"Q&A Structure",what:"Whether your content uses explicit Q&A formatting — FAQ sections, question-based headings with immediate answers below.",why:"Google PAA boxes, featured snippets, and AI engines all harvest Q&A content. Without structure, your expertise is invisible.",fix:"Add FAQ sections to every key page. Use H2/H3 headings as questions. Add FAQ JSON-LD schema. Keep answers under 50 words.",impact:"FAQ schema unlocks People Also Ask boxes — appearing on 43% of all Google searches at zero extra cost."},
+                  featuredSnippetFormats:{title:"Featured Snippet Formats",what:"How well your content uses numbered lists, bullets, tables, and concise paragraphs — formats Google pulls into the answer box.",why:"Featured snippets get 35-40% of all clicks on a results page and directly feed AI answer engines as source material.",fix:"Use numbered lists for steps. Bullets for comparisons. Add definition sentences. Keep list items under 8 words.",impact:"Winning one featured snippet for a high-volume keyword can double organic traffic overnight and gets content cited by AI automatically."},
+                  voiceSearchReadiness:{title:"Voice Search Readiness",what:"How well your content answers the conversational, long-tail questions people ask Siri, Google Assistant, and Alexa.",why:"30% of searches are voice queries. Voice assistants read ONE answer aloud — if you are not optimized, you are never mentioned.",fix:"Write at Grade 8-9 reading level. Target long-tail question keywords. Include local details. Add speakable schema markup.",impact:"Voice search dominates near-me and local queries — being the one answer a customer hears when searching for nearby services."},
+                  contentStructure:{title:"Content Structure",what:"The overall organization of your page — heading hierarchy, logical flow, and how well it guides AI through the information.",why:"AI engines parse top-to-bottom. Poor structure means they cannot identify what is important — good structure means more citations.",fix:"One H1 per page. H2 for main sections, H3 for subsections. Paragraphs under 3 sentences. Put key content first.",impact:"Well-structured pages rank higher in traditional SEO AND get cited more in AI responses — a compounding double win."}
+                };
+                const d = info[key]; if (!d) return null;
+                const pct = Math.round((score / 20) * 100);
+                const col = pct >= 75 ? "#10b981" : pct >= 50 ? "#f59e0b" : "#ef4444";
+                return (
+                  <details key={key} className="border border-[var(--border-primary)] rounded-xl overflow-hidden group">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors list-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full" style={{background:col}}/>
+                        <span className="text-sm font-medium">{d.title}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-20 h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
+                          <div className="h-1.5 rounded-full" style={{width:`${pct}%`,background:col}}/>
+                        </div>
+                        <span className="text-xs font-mono font-bold" style={{color:col}}>{score}/20</span>
+                        <svg className="w-4 h-4 text-[var(--text-muted)] group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                      </div>
+                    </summary>
+                    <div className="border-t border-[var(--border-primary)] p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--bg-secondary)]">
+                      <div><p className="text-xs font-semibold text-teal-400 uppercase mb-1">What it measures</p><p className="text-xs text-[var(--text-muted)]">{d.what}</p></div>
+                      <div><p className="text-xs font-semibold text-yellow-400 uppercase mb-1">Why it matters</p><p className="text-xs text-[var(--text-muted)]">{d.why}</p></div>
+                      <div><p className="text-xs font-semibold text-blue-400 uppercase mb-1">How to fix it</p><p className="text-xs text-[var(--text-muted)]">{d.fix}</p></div>
+                      <div><p className="text-xs font-semibold text-green-400 uppercase mb-1">Business impact</p><p className="text-xs text-[var(--text-muted)]">{d.impact}</p></div>
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+          )}
+
           {/* Keywords tab */}
           {tab === 'keywords' && kw && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
