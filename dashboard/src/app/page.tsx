@@ -777,7 +777,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           )}
 
           {/* Agency AEO Breakdown */}
-          {tab === 'aeo' && aeo && account?.agency?.tier === 'agency' && aeo.breakdown && (
+          {tab === 'aeo' && aeo && userTier === 'agency' && aeo.breakdown && (
             <div className="mt-4 space-y-3">
               <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — Score Breakdown</p>
               {(Object.entries(aeo.breakdown) as [string, number][]).map(([key, score]) => {
