@@ -69,7 +69,11 @@ router.post('/score', async (req, res) => {
     $('script[type="application/ld+json"]').each((_, el) => {
       try {
         const d = JSON.parse($(el).html() || '{}');
-        schemas.push(d['@type']);
+        if (d['@graph'] && Array.isArray(d['@graph'])) {
+          d['@graph'].forEach(item => { if (item['@type']) schemas.push(item['@type']); });
+        } else if (d['@type']) {
+          schemas.push(d['@type']);
+        }
       } catch {}
     });
 

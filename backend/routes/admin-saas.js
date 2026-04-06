@@ -5,11 +5,18 @@ const { generateApiKey, hashKey } = require('../middleware/apiKey');
 
 const router = express.Router();
 
-// Simple admin token check (set ADMIN_TOKEN in .env)
+// Admin token check (set ADMIN_TOKEN in .env, min 32 chars)
 function adminAuth(req, res, next) {
-  const token = req.headers['x-admin-token'] || req.query.admin_token;
-  if (!token || token !== process.env.ADMIN_TOKEN) {
+  const token = req.headers['x-admin-token'];
+  // Do NOT accept token from query params (it gets logged in URLs/access logs)
+  if (!token || !process.env.ADMIN_TOKEN || process.env.ADMIN_TOKEN.length < 32) {
     return res.status(401).json({ error: 'Admin token required' });
+  }
+  // Timing-safe comparison to prevent timing attacks
+  const a = Buffer.from(token);
+  const b = Buffer.from(process.env.ADMIN_TOKEN);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(401).json({ error: 'Invalid admin token' });
   }
   next();
 }

@@ -2,7 +2,7 @@ const { pool } = require('../db');
 const crypto = require('crypto');
 
 // Endpoints that require an API key (public SaaS endpoints)
-const PROTECTED_ENDPOINTS = ['/api/crawl', '/api/geo', '/api/preview', '/api/technical', '/api/keywords', '/api/sitecrawl', '/api/schema', '/api/compare', '/api/bulk', '/api/report'];
+const PROTECTED_ENDPOINTS = ['/api/crawl', '/api/geo', '/api/aeo', '/api/preview', '/api/technical', '/api/keywords', '/api/sitecrawl', '/api/schema', '/api/compare', '/api/bulk', '/api/report', '/api/monitor'];
 
 // Feature → endpoint mapping for tier gating
 const ENDPOINT_FEATURE_MAP = {
@@ -17,6 +17,7 @@ const ENDPOINT_FEATURE_MAP = {
   '/api/sitecrawl': 'sitecrawl',
   '/api/report': 'pdf',
   '/api/monitor': 'monitor',
+  '/api/aeo': 'aeo',
 };
 
 function hashKey(key) {

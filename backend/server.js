@@ -12,6 +12,7 @@ const adminSaasRoutes = require('./routes/admin-saas');
 const accountRoutes = require('./routes/account');
 const webhookRoutes = require('./routes/webhooks');
 const billingRoutes = require('./routes/billing');
+const quickbooksRoutes = require('./routes/quickbooks');
 
 const authRoutes = require('./routes/auth');
 const analysisRoutes = require('./routes/analysis');
@@ -19,6 +20,7 @@ const analyticsRoutes = require('./routes/analytics');
 const adminRoutes = require('./routes/admin');
 const crawlRoutes = require('./routes/crawl');
 const geoRoutes = require('./routes/geo');
+const aeoRoutes = require("./routes/aeo");
 const compareRoutes = require('./routes/compare');
 const bulkRoutes = require('./routes/bulk');
 const reportRoutes = require('./routes/report');
@@ -33,13 +35,34 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'https://analysis.seoh.ca,https://app.seoh.ca').split(',');
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    return callback(new Error('CORS not allowed'), false);
+  },
+  credentials: true,
+}));
 
 // Webhooks need raw body — register BEFORE express.json()
 app.use('/api/webhooks', webhookRoutes);
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
+
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 20, // 20 attempts per window
+  message: { error: 'Too many attempts, please try again later' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
 
 // Initialize database
 initializeDatabase();
@@ -54,6 +77,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/crawl', crawlRoutes);
 app.use('/api/geo', geoRoutes);
+app.use("/api/aeo", aeoRoutes);
 app.use('/api/compare', compareRoutes);
 app.use('/api/bulk', bulkRoutes);
 app.use('/api/report', reportRoutes);
@@ -66,16 +90,18 @@ app.use('/api/schema', schemaRoutes);
 app.use('/api/admin-saas', adminSaasRoutes);
 app.use('/api/account', accountRoutes);
 app.use('/api/billing', billingRoutes);
+app.use('/api/quickbooks', quickbooksRoutes);
 
 // Public API docs endpoint
 app.get('/api', (req, res) => {
   res.json({
-    name: 'SEO & GEO Analysis API',
+    name: 'SEO, GEO & AEO Analysis API',
     version: '2.0.0',
     docs: 'https://app.seoh.ca/docs',
     endpoints: {
       'POST /api/crawl/analyze': 'Real SEO crawl — title, meta, headings, links, schema',
       'POST /api/geo/score': 'GEO score — AI search engine visibility (0-100)',
+      'POST /api/aeo/score': 'AEO score — answer engine optimization, Featured Snippets, PAA, voice (0-100)',
       'POST /api/preview/analyze': 'SERP + social preview + readability score',
       'POST /api/technical/check': 'Robots.txt, sitemap, redirect chain',
       'POST /api/keywords/analyze': 'Keyword density and bigram analysis',

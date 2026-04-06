@@ -1,5 +1,6 @@
 const express = require('express');
 const { pool } = require('../db');
+const { syncToQuickBooks } = require('../services/quickbooks');
 
 const router = express.Router();
 
@@ -19,14 +20,14 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+  if (!webhookSecret) {
+    console.error('[webhook] STRIPE_WEBHOOK_SECRET not configured — rejecting all webhooks');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
+
   let event;
   try {
-    if (webhookSecret) {
-      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-    } else {
-      // Dev mode — no signature verification
-      event = JSON.parse(req.body.toString());
-    }
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
   } catch (err) {
     console.warn('[webhook] Stripe signature verification failed:', err.message);
     return res.status(400).json({ error: 'Invalid signature' });
@@ -39,7 +40,24 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
       case 'checkout.session.completed': {
         const session = event.data.object;
         if (session.mode === 'subscription') {
-          const tier = session.metadata?.tier;
+          // Retrieve subscription to get the price ID (authoritative tier source)
+          let tier = null;
+          if (session.subscription) {
+            try {
+              const sub = await stripe.subscriptions.retrieve(session.subscription);
+              const priceId = sub.items?.data?.[0]?.price?.id;
+              tier = getPriceTier(priceId);
+            } catch (e) {
+              console.warn('[webhook] Could not retrieve subscription for tier resolution:', e.message);
+            }
+          }
+          // Fallback to metadata only if price lookup fails
+          if (!tier) tier = session.metadata?.tier;
+          // Validate tier is a known value
+          if (tier && !['starter', 'pro', 'agency'].includes(tier)) {
+            console.warn(`[webhook] Invalid tier from metadata: ${tier}`);
+            tier = null;
+          }
           const email = session.customer_email || session.metadata?.email;
           const agencyId = session.metadata?.agency_id ? parseInt(session.metadata.agency_id) : null;
           if (tier && (email || agencyId)) {
@@ -95,6 +113,32 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
           } catch (e) {}
         }
         await handleSubscriptionInactive(email, agencyId);
+
+        // QB: log cancellation as a journal note via sync log metadata
+        const cancelId = `cancel_${sub.id}_${Date.now()}`;
+        syncToQuickBooks({
+          id: cancelId,
+          _type: 'cancellation',
+          customer_email: email,
+          amount_paid: 0,
+          total: 0,
+          currency: 'usd',
+          created: Math.floor(Date.now() / 1000),
+          lines: { data: [] },
+          _note: `Subscription cancelled: ${sub.id}`,
+        }).catch(err =>
+          console.error('[webhook] QB cancellation note failed:', err.message)
+        );
+        break;
+      }
+
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object;
+        console.log(`[webhook] Payment succeeded for invoice ${invoice.id}, customer ${invoice.customer}`);
+        // Async QB sync — don't block webhook response
+        syncToQuickBooks(invoice).catch(err =>
+          console.error('[webhook] QB sync failed:', err.message)
+        );
         break;
       }
 

@@ -163,6 +163,32 @@ const initializeDatabase = async () => {
       ON CONFLICT (tier) DO NOTHING;
     `);
 
+    // QuickBooks OAuth token storage
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS qb_tokens (
+        id SERIAL PRIMARY KEY,
+        access_token TEXT NOT NULL,
+        refresh_token TEXT NOT NULL,
+        realm_id TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        company_name TEXT,
+        created_at TIMESTAMPTZ DEFAULT NOW(),
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // QuickBooks sync idempotency log
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS qb_sync_log (
+        id SERIAL PRIMARY KEY,
+        stripe_id TEXT UNIQUE NOT NULL,
+        qb_entity_type TEXT NOT NULL,
+        qb_entity_id TEXT NOT NULL,
+        metadata JSONB DEFAULT '{}',
+        synced_at TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
     console.log('Database tables initialized successfully');
   } catch (error) {
     console.error('Error initializing database:', error);

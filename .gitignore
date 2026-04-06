@@ -45,3 +45,10 @@ expo.log
 .env
 .env.local
 .env.production
+.env
+.env.*
+!.env.example
+backend/.env
+dashboard/.next/
+*.pack
+*.pack.old

@@ -19,13 +19,13 @@ function fetchImageBuffer(url) {
 }
 
 router.post('/pdf', async (req, res) => {
-  const { url, crawlData, geoData, pageSpeedData, branding } = req.body;
+  const { url, crawlData, geoData, aeoData, pageSpeedData, branding } = req.body;
   if (!url) return res.status(400).json({ error: 'URL required' });
 
   // Branding — per-request overrides env fallback
   const brandName = branding?.name || process.env.BRAND_NAME || 'SEO Analytics';
   const brandColor = branding?.color || '#111111';
-  const brandTagline = branding?.tagline || 'SEO & GEO Analysis Report';
+  const brandTagline = branding?.tagline || 'SEO, GEO & AEO Analysis Report';
   const brandWebsite = branding?.website || process.env.BRAND_CTA_URL || '';
   const brandLogoUrl = branding?.logoUrl || null;
 
@@ -69,6 +69,7 @@ router.post('/pdf', async (req, res) => {
   const scores = [
     ['Overall SEO Score', crawlData?.seoScore ?? '—'],
     ['GEO Score', geoData?.geoScore ?? '—'],
+    ['AEO Score', aeoData?.aeoScore ?? '—'],
     ['Performance', pageSpeedData?.performance ?? '—'],
     ['Accessibility', pageSpeedData?.accessibility ?? '—'],
   ];
@@ -111,6 +112,42 @@ router.post('/pdf', async (req, res) => {
       doc.fontSize(10).font('Helvetica').fillColor('#333').text(`${i + 1}. ${rec}`);
       doc.moveDown(0.3);
     });
+    doc.moveDown(1.5);
+  }
+
+
+  // ── AEO Breakdown ──────────────────────────────────────────────────────────
+  if (aeoData?.breakdown) {
+    doc.fontSize(16).font('Helvetica-Bold').fillColor('#111').text('AEO — Answer Engine Optimization');
+    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke(brandColor);
+    doc.moveDown(0.5);
+    doc.fontSize(11).font('Helvetica-Bold').fillColor('#333').text(`Overall AEO Score: ${aeoData.aeoScore}/100 (Grade ${aeoData.grade})`);
+    doc.fontSize(10).font('Helvetica').fillColor('#666').text(aeoData.grading || '');
+    doc.moveDown(0.5);
+
+    const dimensions = [
+      ['Direct Answer Blocks', aeoData.breakdown.directAnswerBlocks],
+      ['Question & Answer Structure', aeoData.breakdown.questionAnswerStructure],
+      ['Featured Snippet Formats', aeoData.breakdown.featuredSnippetFormats],
+      ['Voice Search Readiness', aeoData.breakdown.voiceSearchReadiness],
+      ['Answer Schema Signals', aeoData.breakdown.answerSchemaSignals],
+    ];
+    dimensions.forEach(([label, dim]) => {
+      if (dim) {
+        doc.fontSize(10).font('Helvetica').fillColor('#444')
+          .text(`${label}: ${dim.score}/${dim.max}`, { continued: false });
+      }
+    });
+    doc.moveDown(0.5);
+
+    if (aeoData.recommendations?.length) {
+      doc.fontSize(12).font('Helvetica-Bold').fillColor('#333').text('AEO Recommendations');
+      doc.moveDown(0.3);
+      aeoData.recommendations.forEach((rec, i) => {
+        doc.fontSize(10).font('Helvetica').fillColor('#333').text(`${i + 1}. ${rec}`);
+        doc.moveDown(0.2);
+      });
+    }
     doc.moveDown(1.5);
   }
 
