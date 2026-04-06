@@ -270,20 +270,6 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
 function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier: string; apiKey?: string }) {
   const [features, setFeatures] = useState<FeatureItem[] | null>(null);
   const [loading, setLoading] = useState(false);
-  // Theme
-  const [isLight, setIsLight] = useState(false);
-  useEffect(() => {
-    const saved = localStorage.getItem('seoh-theme');
-    if (saved === 'light') { setIsLight(true); document.body.classList.add('light'); }
-  }, []);
-  const toggleTheme = () => {
-    setIsLight(prev => {
-      const next = !prev;
-      if (next) { document.body.classList.add('light'); localStorage.setItem('seoh-theme', 'light'); }
-      else { document.body.classList.remove('light'); localStorage.setItem('seoh-theme', 'dark'); }
-      return next;
-    });
-  };
 
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
@@ -997,6 +983,20 @@ export default function Dashboard() {
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetToken, setResetToken] = useState('');
   const [resetEmail, setResetEmail] = useState('');
+  // Theme
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const saved = localStorage.getItem('seoh-theme');
+    if (saved === 'light') { setIsLight(true); document.body.classList.add('light'); }
+  }, []);
+  const toggleTheme = () => {
+    setIsLight(prev => {
+      const next = !prev;
+      if (next) { document.body.classList.add('light'); localStorage.setItem('seoh-theme', 'light'); }
+      else { document.body.classList.remove('light'); localStorage.setItem('seoh-theme', 'dark'); }
+      return next;
+    });
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem('dashboard_token');
