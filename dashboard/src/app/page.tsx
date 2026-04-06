@@ -431,7 +431,7 @@ function ScoreRing({ score, max = 100, color = '#14b8a6', size = 80 }: { score: 
   const dash = (pct / 100) * circ;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border-primary)" strokeWidth="8" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--ring-track)" strokeWidth="8" />
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="8"
         strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
@@ -582,13 +582,17 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     { label: 'HTTPS', ok: seo.isHttps },
                     { label: 'Mobile', ok: seo.mobileOptimized },
                     { label: 'Canonical', ok: !!seo.canonical },
-                    { label: 'OG Image', ok: !!seo.openGraph?.image },
                   ].map(i => (
                     <div key={i.label} className="text-center">
-                      <div className={`text-lg ${i.ok ? 'text-green-400' : 'text-red-500 dark:text-red-400'}`}>{i.ok ? '✓' : '✗'}</div>
+                      <div className={`text-lg ${i.ok ? 'text-green-400' : 'text-red-500'}`}>{i.ok ? '✓' : '✗'}</div>
                       <div className="text-xs text-[var(--text-muted)]">{i.label}</div>
                     </div>
                   ))}
+                  <div className="text-center">
+                    <div className="text-lg text-[var(--text-muted)]">—</div>
+                    <div className="text-xs text-[var(--text-muted)]">OG Image</div>
+                    <div className="text-[10px] text-[var(--text-muted)] opacity-60">optional</div>
+                  </div>
                 </div>
               </div>
 

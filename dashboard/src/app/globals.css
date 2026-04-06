@@ -13,11 +13,13 @@
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
   --accent: #0d9488;
+  --ring-track: #2a2a2a;
   --accent-hover: #0f766e;
 }
 
 .light {
   --bg-primary: #ffffff;
+  --ring-track: #d1d5db;
   --bg-secondary: #f9fafb;
   --bg-card: #ffffff;
   --bg-input: #f3f4f6;
@@ -27,6 +29,7 @@
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
   --accent: #0d9488;
+  --ring-track: #2a2a2a;
   --accent-hover: #0f766e;
 }
 
