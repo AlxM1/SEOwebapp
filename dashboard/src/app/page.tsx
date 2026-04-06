@@ -8,7 +8,7 @@ const TIER_ORDER = ['free', 'starter', 'pro', 'agency'];
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Analysis:   { bg: 'bg-teal-950',   text: 'text-teal-400',   border: 'border-teal-800' },
   Monitoring: { bg: 'bg-orange-950', text: 'text-orange-400', border: 'border-orange-800' },
-  Admin:      { bg: 'bg-red-950',    text: 'text-red-400',    border: 'border-red-800' },
+  Admin:      { bg: 'bg-red-950',    text: 'text-red-500 dark:text-red-400',    border: 'border-red-800' },
   Billing:    { bg: 'bg-purple-950', text: 'text-purple-400', border: 'border-purple-800' },
   Auth:       { bg: 'bg-blue-950',   text: 'text-blue-400',   border: 'border-blue-800' },
 };
@@ -361,7 +361,7 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
         </div>
       )}
       {error && (
-        <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded px-3 py-2 mb-4">{error}</p>
+        <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Grid */}
@@ -431,7 +431,7 @@ function ScoreRing({ score, max = 100, color = '#14b8a6', size = 80 }: { score: 
   const dash = (pct / 100) * circ;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1a1a1a" strokeWidth="8" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--border-primary)" strokeWidth="8" />
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="8"
         strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
@@ -467,18 +467,22 @@ function AnalyzeSection({ token }: { token: string }) {
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const body = JSON.stringify({ url: url.trim() });
     try {
-      const [r1, r2, r3, r4, r5] = await Promise.all([
+      const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
         fetch(`${API_BASE}/crawl/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/geo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/keywords/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/aeo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/social/score`, { method: 'POST', headers, body }),
+        fetch(`${API_BASE}/competitors/analyze`, { method: 'POST', headers, body: JSON.stringify({ url, seo: seo || {}, geo: geo || {}, aeo: aeo || {} }) }),
+        fetch(`${API_BASE}/ai-recommendations/analyze`, { method: 'POST', headers, body: JSON.stringify({ url: seo?.url || url, seo: seo || {}, geo: geo || {} }) }),
       ]);
-      const [d1, d2, d3, d4, d5] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json()]);
+      const [d1, d2, d3, d4, d5, d6, d7] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json(), r6.json(), r7.json()]);
       if (!r1.ok) throw new Error(d1.error || 'SEO analysis failed');
       setSeo(d1); setGeo(d2); setKw(d3);
       if (r4.ok) setAeo(d4);
       if (r5.ok) setSocial(d5);
+      if (r6.ok) setCompetitors(d6);
+      if (r7.ok) setAiRecs(d7);
       setTab('seo');
     } catch (e: any) { setError(e.message || 'Analysis failed'); }
     setLoading(false);
@@ -500,7 +504,7 @@ function AnalyzeSection({ token }: { token: string }) {
           {loading ? 'Analyzing…' : 'Run Analysis'}
         </button>
       </div>
-      {error && <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded px-3 py-2 mb-4">{error}</p>}
+      {error && <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2 mb-4">{error}</p>}
       {loading && (
         <div className="flex items-center gap-3 py-10 justify-center text-[var(--text-secondary)] text-sm">
           <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -544,25 +548,10 @@ function AnalyzeSection({ token }: { token: string }) {
             {(['seo', 'geo', 'aeo', 'keywords', 'social', 'competitors', 'airecs'] as const).map(t => (
               <button key={t} onClick={() => {
                 setTab(t);
-                if (t === 'airecs' && !aiRecs && !aiRecsLoading) {
-                  setAiRecsLoading(true);
-                  setAiRecsError(null);
-                  setAiRecsUpgrade(false);
-                  fetch(`${API_BASE}/ai-recommendations/analyze`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({ url: seo?.url || url, seo: seo || {}, geo: geo || {} }),
-                  }).then(async r => {
-                    if (r.status === 403) { setAiRecsUpgrade(true); setAiRecsLoading(false); return; }
-                    const d = await r.json();
-                    if (!r.ok) throw new Error(d.error || 'AI analysis failed');
-                    setAiRecs(d);
-                    setAiRecsLoading(false);
-                  }).catch(e => { setAiRecsError(e.message); setAiRecsLoading(false); });
-                }
+
               }}
                 className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${tab === t ? 'bg-teal-600 text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}>
-                {t === 'geo' ? 'GEO / AI' : t === 'seo' ? 'SEO' : t === 'airecs' ? 'AI Recs' : t === 'aeo' ? 'AEO' : t === 'social' ? 'Social' : t === 'competitors' ? 'Rivals' : 'Keywords'}
+                {t === 'geo' ? 'GEO / AI' : t === 'seo' ? 'SEO' : t === 'airecs' ? 'AI Recs' : t === 'aeo' ? 'AEO' : t === 'social' ? 'Social' : t === 'competitors' ? 'Competitors' : 'Keywords'}
               </button>
             ))}
           </div>
@@ -595,7 +584,7 @@ function AnalyzeSection({ token }: { token: string }) {
                     { label: 'OG Image', ok: !!seo.openGraph?.image },
                   ].map(i => (
                     <div key={i.label} className="text-center">
-                      <div className={`text-lg ${i.ok ? 'text-green-400' : 'text-red-400'}`}>{i.ok ? '✓' : '✗'}</div>
+                      <div className={`text-lg ${i.ok ? 'text-green-400' : 'text-red-500 dark:text-red-400'}`}>{i.ok ? '✓' : '✗'}</div>
                       <div className="text-xs text-[var(--text-muted)]">{i.label}</div>
                     </div>
                   ))}
@@ -828,7 +817,7 @@ function AnalyzeSection({ token }: { token: string }) {
                   Analyzing social presence...
                 </div>
               )}
-              {socialError && <p className="text-red-400 text-sm">{socialError}</p>}
+              {socialError && <p className="text-red-500 dark:text-red-400 text-sm">{socialError}</p>}
               {social && (
                 <div className="space-y-4">
                   {/* Overall score */}
@@ -846,7 +835,7 @@ function AnalyzeSection({ token }: { token: string }) {
                       <div key={platform} className={`border rounded-lg p-3 ${data.found ? 'border-teal-800 bg-teal-950/20' : 'border-[var(--border-primary)] bg-[var(--bg-secondary)]'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium capitalize">{platform === 'twitter' ? 'X (Twitter)' : platform}</span>
-                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-green-400' : data.score >= 30 ? 'text-yellow-400' : 'text-red-400'}`}>{data.score}/100</span>
+                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-green-400' : data.score >= 30 ? 'text-yellow-400' : 'text-red-500 dark:text-red-400'}`}>{data.score}/100</span>
                         </div>
                         <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden mb-1">
                           <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-green-500' : data.score >= 30 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{width: `${data.score}%`}} />
@@ -862,9 +851,9 @@ function AnalyzeSection({ token }: { token: string }) {
                     <div className="border border-[var(--border-primary)] rounded-lg p-3 mt-3">
                       <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Social Meta Tags</p>
                       <div className="flex gap-3">
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-400'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
                       </div>
                     </div>
                   )}
@@ -877,7 +866,7 @@ function AnalyzeSection({ token }: { token: string }) {
                         {social.recommendations.map((rec: any, i: number) => (
                           <div key={i} className="border border-[var(--border-primary)] rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-red-950 text-red-400' : rec.priority === 'medium' ? 'bg-yellow-950 text-yellow-400' : 'bg-green-950 text-green-400'}`}>{rec.priority}</span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-red-950 text-red-500 dark:text-red-400' : rec.priority === 'medium' ? 'bg-yellow-950 text-yellow-400' : 'bg-green-950 text-green-400'}`}>{rec.priority}</span>
                               <span className="text-xs font-medium capitalize">{rec.platform}</span>
                             </div>
                             <p className="text-xs text-[var(--text-muted)]">{rec.recommendation}</p>
@@ -899,28 +888,9 @@ function AnalyzeSection({ token }: { token: string }) {
           {tab === 'competitors' && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl p-5">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">Competitor Analysis</h3>
-              {!competitors && !competitorsLoading && (
+              {!competitors && !competitorsLoading && !competitorsError && (
                 <div className="text-center py-8">
-                  <p className="text-[var(--text-muted)] text-sm mb-3">Discover how you stack up against your top 5 local competitors.</p>
-                  <button
-                    onClick={() => {
-                      setCompetitorsLoading(true);
-                      setCompetitorsError(null);
-                      fetch(`${API_BASE}/competitors/analyze`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                        body: JSON.stringify({ url: seo?.url || url, seo, geo, aeo }),
-                      }).then(async r => {
-                        const d = await r.json();
-                        if (!r.ok) throw new Error(d.error || 'Analysis failed');
-                        setCompetitors(d);
-                        setCompetitorsLoading(false);
-                      }).catch(e => { setCompetitorsError(e.message); setCompetitorsLoading(false); });
-                    }}
-                    className="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Run Competitor Analysis
-                  </button>
+                  <p className="text-[var(--text-muted)] text-sm">Competitor analysis running automatically...</p>
                 </div>
               )}
               {competitorsLoading && (
@@ -930,7 +900,7 @@ function AnalyzeSection({ token }: { token: string }) {
                   <p className="text-xs text-[var(--text-muted)]">Scoring each competitor across SEO, GEO, and AEO</p>
                 </div>
               )}
-              {competitorsError && <p className="text-red-400 text-sm">{competitorsError}</p>}
+              {competitorsError && <p className="text-red-500 dark:text-red-400 text-sm">{competitorsError}</p>}
               {competitors && (
                 <div className="space-y-4">
                   {/* Business info */}
@@ -967,9 +937,9 @@ function AnalyzeSection({ token }: { token: string }) {
                               <p className="font-medium">{c.name}</p>
                               <a href={c.url} target="_blank" rel="noopener" className="text-teal-400 hover:underline truncate block max-w-[200px]">{c.url?.replace(/https?:\/\//, '')}</a>
                             </td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.seo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.geo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-red-400' : 'text-green-400'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.seo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.geo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
                           </tr>
                         ))}
                       </tbody>
@@ -984,7 +954,7 @@ function AnalyzeSection({ token }: { token: string }) {
                         <ul className="space-y-1">{competitors.insights.strengths?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
                       <div className="border border-red-800 rounded-lg p-3 bg-red-950/20">
-                        <p className="text-xs font-semibold text-red-400 uppercase mb-2">Weaknesses</p>
+                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 uppercase mb-2">Weaknesses</p>
                         <ul className="space-y-1">{competitors.insights.weaknesses?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
                       <div className="border border-blue-800 rounded-lg p-3 bg-blue-950/20">
@@ -1022,7 +992,7 @@ function AnalyzeSection({ token }: { token: string }) {
                 </div>
               )}
               {aiRecsError && (
-                <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded px-3 py-2">{aiRecsError}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{aiRecsError}</p>
               )}
               {aiRecs && aiRecs.recommendations && (
                 <div className="space-y-4">
@@ -1033,7 +1003,7 @@ function AnalyzeSection({ token }: { token: string }) {
                     <div key={i} className="border border-[var(--border-secondary)] rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-semibold text-[var(--text-primary)]">{rec.title}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-red-900/50 text-red-400' : rec.impact === 'medium' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-blue-900/50 text-blue-400'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-red-900/50 text-red-500 dark:text-red-400' : rec.impact === 'medium' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-blue-900/50 text-blue-400'}`}>
                           {rec.impact}
                         </span>
                       </div>
@@ -1120,7 +1090,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded px-3 py-2">{error}</p>
+                <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{error}</p>
               )}
               <div>
                 <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
@@ -1149,7 +1119,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
                     <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                       <div className={`h-1 rounded-full transition-all ${strength.color} ${strength.width}`} />
                     </div>
-                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-green-400" : strength.label === "Fair" ? "text-yellow-400" : "text-red-400"}`}>
+                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-green-400" : strength.label === "Fair" ? "text-yellow-400" : "text-red-500 dark:text-red-400"}`}>
                       {strength.label}
                     </p>
                   </div>
@@ -1283,7 +1253,7 @@ export default function Dashboard() {
           </button>
         </div>
         <form onSubmit={login} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 space-y-4">
-          {error && <p className="text-red-400 text-sm bg-red-950 border border-red-800 rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{error}</p>}
           <div>
             <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
             <input type="email" required value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}
