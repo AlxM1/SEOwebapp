@@ -467,7 +467,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
     const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
     const body = JSON.stringify({ url: url.trim() });
     try {
-      const [r1, r2, r3, r4, r5, r6, r7] = await Promise.all([
+      const settled = await Promise.allSettled([
         fetch(`${API_BASE}/crawl/analyze`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/geo/score`, { method: 'POST', headers, body }),
         fetch(`${API_BASE}/keywords/analyze`, { method: 'POST', headers, body }),
@@ -476,13 +476,16 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
         fetch(`${API_BASE}/competitors/analyze`, { method: 'POST', headers, body: JSON.stringify({ url, seo: seo || {}, geo: geo || {}, aeo: aeo || {} }) }),
         fetch(`${API_BASE}/ai-recommendations/analyze`, { method: 'POST', headers, body: JSON.stringify({ url: seo?.url || url, seo: seo || {}, geo: geo || {} }) }),
       ]);
-      const [d1, d2, d3, d4, d5, d6, d7] = await Promise.all([r1.json(), r2.json(), r3.json(), r4.json(), r5.json(), r6.json(), r7.json()]);
+      const getR = (i: number) => settled[i].status === 'fulfilled' ? (settled[i] as PromiseFulfilledResult<Response>).value : null;
+      const [r1, r2, r3, r4, r5, r6, r7] = [0,1,2,3,4,5,6].map(getR) as Response[];
+      const safeJson = async (r: Response | null) => { if (!r) return null; try { return await r.json(); } catch { return null; } };
+      const [d1, d2, d3, d4, d5, d6, d7] = await Promise.all([safeJson(r1), safeJson(r2), safeJson(r3), safeJson(r4), safeJson(r5), safeJson(r6), safeJson(r7)]);
       if (!r1.ok) throw new Error(d1.error || 'SEO analysis failed');
       setSeo(d1); setGeo(d2); setKw(d3);
-      if (r4.ok) setAeo(d4);
-      if (r5.ok) setSocial(d5);
-      if (r6.ok) setCompetitors(d6);
-      if (r7.ok) setAiRecs(d7);
+      if (r4?.ok) setAeo(d4);
+      if (r5?.ok) setSocial(d5);
+      if (r6?.ok) setCompetitors(d6);
+      if (r7?.ok) setAiRecs(d7);
       setTab('seo');
     } catch (e: any) { setError(e.message || 'Analysis failed'); }
     setLoading(false);
