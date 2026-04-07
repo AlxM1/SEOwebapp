@@ -52,11 +52,11 @@ router.post('/analyze', async (req, res) => {
   const seoData = (typeof seo === 'object' && seo) ? seo : {};
   const geoData = (typeof geo === 'object' && geo) ? geo : {};
 
-  const h2List = (seo.headings?.h2 || []).slice(0, 5).join(' | ') || 'None';
-  const h1List = (seo.headings?.h1 || []).join(', ') || 'None';
-  const schemaList = (geo.schemas || []).join(', ') || 'None';
-  const seoIssues = (seo.issues || []).join('; ') || 'None';
-  const algoRecs = (geo.recommendations || []).join('; ') || 'None';
+  const h2List = (seoData.headings?.h2 || []).slice(0, 5).join(' | ') || 'None';
+  const h1List = (seoData.headings?.h1 || []).join(', ') || 'None';
+  const schemaList = (geoData.schemas || []).join(', ') || 'None';
+  const seoIssues = (seoData.issues || []).join('; ') || 'None';
+  const algoRecs = (geoData.recommendations || []).join('; ') || 'None';
   const metaSnippet = seoData.metaDescription ? seoData.metaDescription.slice(0, 200) : 'Missing';
   const geoBreakdown = `Answer Readiness ${geo.breakdown?.answerReadiness?.score}/${geo.breakdown?.answerReadiness?.max}, Structured Data ${geo.breakdown?.structuredData?.score}/${geo.breakdown?.structuredData?.max}, Authority ${geo.breakdown?.authoritySignals?.score}/${geo.breakdown?.authoritySignals?.max}, Structure ${geo.breakdown?.parseableStructure?.score}/${geo.breakdown?.parseableStructure?.max}`;
 
@@ -64,13 +64,13 @@ router.post('/analyze', async (req, res) => {
     'URL: ' + url,
     'Title: ' + (seoData.title || 'N/A') + ' (' + (seoData.titleLength || 0) + ' chars)',
     'Meta description: ' + metaSnippet,
-    'Word count: ' + (seo.content?.wordCount || 0),
+    'Word count: ' + (seoData.content?.wordCount || 0),
     'H1: ' + h1List,
     'H2s: ' + h2List,
-    'Internal links: ' + (seo.links?.internal || 0) + ', External: ' + (seo.links?.external || 0),
-    'Images missing alt: ' + (seo.images?.withoutAlt || 0) + ' of ' + (seo.images?.total || 0),
+    'Internal links: ' + (seoData.links?.internal || 0) + ', External: ' + (seo.links?.external || 0),
+    'Images missing alt: ' + (seoData.images?.withoutAlt || 0) + ' of ' + (seo.images?.total || 0),
     'Schema types: ' + schemaList,
-    'GEO score: ' + (geoData.geoScore || 0) + '/100 (Grade ' + (geoData.grade || 'N/A') + ') — ' + (geo.grading || ''),
+    'GEO score: ' + (geoData.geoScore || 0) + '/100 (Grade ' + (geoData.grade || 'N/A') + ') — ' + (geoData.grading || ''),
     'GEO breakdown: ' + geoBreakdown,
     'SEO issues: ' + seoIssues,
     'Existing algorithmic GEO recs: ' + algoRecs,
