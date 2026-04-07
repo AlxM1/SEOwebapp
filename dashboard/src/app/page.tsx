@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   Auth:       '🔐',
 };
 function getCategoryColor(cat: string) {
-  return CATEGORY_COLORS[cat] || { bg: 'bg-gray-900', text: 'text-[var(--text-secondary)]', border: 'border-[var(--border-primary)]' };
+  return CATEGORY_COLORS[cat] || { bg: 'bg-[var(--bg-secondary)]', text: 'text-[var(--text-secondary)]', border: 'border-[var(--border-primary)]' };
 }
 function tierLabel(tier: string) {
   if (!tier || tier === 'free') return 'Free+';
@@ -361,7 +361,7 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
         </div>
       )}
       {error && (
-        <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>
+        <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Grid */}
@@ -505,7 +505,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {loading ? 'Analyzing…' : 'Run Analysis'}
         </button>
       </div>
-      {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>}
+      {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>}
       {loading && (
         <div className="flex items-center gap-3 py-10 justify-center text-[var(--text-secondary)] text-sm">
           <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -844,7 +844,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     </div>
                     <span className="text-xs text-[var(--text-muted)] w-20 text-right">{k.count}× ({k.density}%)</span>
                     <div className="flex gap-1 w-16 justify-end">
-                      {k.inTitle && <span className="text-xs bg-blue-900/40 text-[var(--status-blue)] px-1.5 py-0.5 rounded">T</span>}
+                      {k.inTitle && <span className="text-xs bg-[var(--status-blue-bg)]/40 text-[var(--status-blue)] px-1.5 py-0.5 rounded">T</span>}
                       {k.inH1 && <span className="text-xs bg-teal-900/40 text-[var(--accent)] px-1.5 py-0.5 rounded">H1</span>}
                       {k.inMeta && <span className="text-xs bg-purple-900/40 text-purple-600 px-1.5 py-0.5 rounded">M</span>}
                     </div>
@@ -1064,7 +1064,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                 </div>
               )}
               {aiRecsError && (
-                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{aiRecsError}</p>
+                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{aiRecsError}</p>
               )}
               {aiRecs && aiRecs.recommendations && (
                 <div className="space-y-4">
@@ -1162,7 +1162,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>
+                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>
               )}
               <div>
                 <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
@@ -1325,7 +1325,7 @@ export default function Dashboard() {
           </button>
         </div>
         <form onSubmit={login} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 space-y-4">
-          {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>}
           <div>
             <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
             <input type="email" required value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}
@@ -1422,7 +1422,7 @@ export default function Dashboard() {
               <p className="text-[var(--status-green)] text-sm font-semibold mb-2">Key generated — save it now, it won&apos;t be shown again</p>
               <div className="flex items-center gap-2">
                 <code className="flex-1 bg-black rounded px-3 py-2 text-sm font-mono text-[var(--status-green)] break-all">{newKeyResult.raw_key}</code>
-                <button onClick={() => copy(newKeyResult.raw_key, 'new')} className="bg-green-800 hover:bg-green-700 px-3 py-2 rounded text-xs">
+                <button onClick={() => copy(newKeyResult.raw_key, 'new')} className="bg-[var(--status-green-bg)] hover:bg-[var(--status-green-bg)] px-3 py-2 rounded text-xs">
                   {copied === 'new' ? 'Copied!' : 'Copy'}
                 </button>
               </div>
