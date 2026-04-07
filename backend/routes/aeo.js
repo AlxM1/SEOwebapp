@@ -134,7 +134,7 @@ router.post('/score', async (req, res) => {
       try {
         const d = JSON.parse($(el).html() || '{}');
         const graph = d['@graph'] || [d];
-        graph.forEach((item: any) => {
+        graph.forEach((item) => {
           if (item['@type'] === 'FAQPage' && Array.isArray(item.mainEntity)) {
             schemaQaPairs += item.mainEntity.length;
           }
