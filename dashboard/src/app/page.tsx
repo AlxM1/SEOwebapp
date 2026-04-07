@@ -1166,11 +1166,13 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                         body: JSON.stringify({ url: seo?.url || url, seo, geo, aeo }),
                       }).then(async r => {
-                        const d = await r.json();
-                        if (!r.ok) throw new Error(d.error || 'Analysis failed');
+                        const text = await r.text();
+                        let d: any;
+                        try { d = JSON.parse(text); } catch { throw new Error(`Server error (${r.status}) — try again`); }
+                        if (!r.ok) throw new Error(d.error || `Analysis failed (${r.status})`);
                         setCompetitors(d);
                         setCompetitorsLoading(false);
-                      }).catch(e => { setCompetitorsError(e.message); setCompetitorsLoading(false); });
+                      }).catch((e: any) => { setCompetitorsError(e.message || 'Analysis failed — try again'); setCompetitorsLoading(false); });
                     }}
                     className="bg-teal-600 hover:bg-teal-700 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors"
                   >
