@@ -829,6 +829,213 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
             </div>
           )}
 
+
+          {/* Agency GEO Breakdown */}
+          {tab === 'geo' && geo && userTier === 'agency' && geo.breakdown && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — GEO Score Breakdown</p>
+              {(Object.entries(geo.breakdown) as [string, {score:number;max:number}][]).map(([key, val]) => {
+                if (!val || typeof val !== 'object') return null;
+                const scoreNum = val.score ?? 0;
+                const maxNum = val.max ?? 20;
+                const info: Record<string, {title:string;what:string;why:string;fix:string;impact:string}> = {
+                  answerReadiness:{
+                    title:"Answer Readiness",
+                    what:"How well your content is structured to directly answer the questions AI engines are asked. Includes Q&A patterns, concise definitions, and answer-first paragraphs.",
+                    why:"ChatGPT, Perplexity, and Google AI Overviews scan pages for direct answers. If your content requires the AI to infer or hunt for the answer, it gets passed over for a clearer source.",
+                    fix:"Add an FAQ section with direct Q&A format. Open paragraphs with the answer, then elaborate. Write definition sentences ('X is...'). Target question-based queries ('What is', 'How does', 'Why should').",
+                    impact:"Pages with high answer readiness are cited 3-5x more in AI responses — appearing as the source when users ask AI assistants questions related to your business."
+                  },
+                  structuredData:{
+                    title:"Structured Data",
+                    what:"Whether your pages use schema markup (JSON-LD, microdata) to explicitly label your content — business info, reviews, FAQs, products, articles — for AI and search engines.",
+                    why:"Schema is the clearest signal you can send to AI engines. It removes ambiguity about what your page is, who wrote it, what it covers, and why it should be trusted.",
+                    fix:"Add Organization schema with name, URL, logo, contact. Add FAQ schema to Q&A pages. Add Article schema to blog posts. Add LocalBusiness schema if location-based. Validate at schema.org/validator.",
+                    impact:"Sites with comprehensive schema markup appear in AI answers 4x more often. Google's structured data directly feeds AI Overviews — without it, you're invisible to the AI layer."
+                  },
+                  authoritySignals:{
+                    title:"Authority Signals",
+                    what:"Indicators that your content comes from a credible, expert source — author attribution, citations, external links to authoritative sources, trust signals, and E-E-A-T markers.",
+                    why:"AI engines have been trained to favor authoritative sources. Google's E-E-A-T (Experience, Expertise, Authoritativeness, Trustworthiness) framework directly influences which pages AI tools cite.",
+                    fix:"Add author bios with credentials. Link to credible external sources. Display trust signals (certifications, awards, years in business). Add an About page with organizational credibility markers.",
+                    impact:"High authority signals make your page the go-to citation for AI engines in your space — meaning every time someone asks an AI about your topic, your business gets mentioned."
+                  },
+                  parseableStructure:{
+                    title:"Parseable Structure",
+                    what:"How easy it is for AI engines to extract and understand your content — heading hierarchy, paragraph length, list formatting, and overall document structure.",
+                    why:"AI models process pages top-to-bottom. Poor structure forces them to guess at relationships between ideas. Well-structured pages get parsed accurately and cited correctly.",
+                    fix:"Use exactly one H1. Structure with H2/H3/H4 hierarchy. Keep paragraphs under 3 sentences. Use bullet points for lists. Ensure your most important content appears above the fold.",
+                    impact:"Parseable structure is the foundation of GEO — without it, even excellent content gets misquoted or ignored. Fixing structure has an immediate effect on citation accuracy."
+                  }
+                };
+                const d = info[key];
+                const title = d?.title ?? key.replace(/([A-Z])/g,' $1').trim();
+                const pct = maxNum > 0 ? Math.round((scoreNum / maxNum) * 100) : 0;
+                const col = pct >= 75 ? "#10b981" : pct >= 50 ? "#f59e0b" : "#ef4444";
+                return (
+                  <details key={key} className="border border-[var(--border-primary)] rounded-xl overflow-hidden group">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors list-none">
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{background:col}}/>
+                        <span className="text-sm font-medium">{title}</span>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-20 h-1.5 bg-[var(--ring-track)] rounded-full overflow-hidden">
+                          <div className="h-1.5 rounded-full" style={{width:`${pct}%`,background:col}}/>
+                        </div>
+                        <span className="text-xs font-mono font-bold w-12 text-right" style={{color:col}}>{scoreNum}/{maxNum}</span>
+                        <svg className="w-4 h-4 text-[var(--text-muted)] group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                      </div>
+                    </summary>
+                    {d && (
+                      <div className="border-t border-[var(--border-primary)] p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--bg-secondary)]">
+                        <div><p className="text-xs font-semibold text-[var(--accent)] uppercase mb-1">What it measures</p><p className="text-xs text-[var(--text-muted)]">{d.what}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-yellow)] uppercase mb-1">Why it matters</p><p className="text-xs text-[var(--text-muted)]">{d.why}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-blue)] uppercase mb-1">How to fix it</p><p className="text-xs text-[var(--text-muted)]">{d.fix}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-green)] uppercase mb-1">Business impact</p><p className="text-xs text-[var(--text-muted)]">{d.impact}</p></div>
+                      </div>
+                    )}
+                  </details>
+                );
+              })}
+            </div>
+          )}
+
+
+          {/* Agency SEO Breakdown */}
+          {tab === 'seo' && seo && userTier === 'agency' && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — SEO Score Breakdown</p>
+              {[
+                {
+                  key: 'titleTag',
+                  title: 'Title Tag',
+                  score: seo.title ? (seo.titleLength >= 30 && seo.titleLength <= 60 ? 20 : seo.titleLength > 0 ? 12 : 0) : 0,
+                  max: 20,
+                  status: seo.title ? (seo.titleLength >= 30 && seo.titleLength <= 60 ? 'good' : 'warn') : 'fail',
+                  detail: seo.title ? `${seo.titleLength} chars — ideal is 30–60` : 'Missing title tag',
+                  what: "The HTML <title> tag — the blue link text in Google search results and the label in browser tabs.",
+                  why: "Title tags are the single most important on-page SEO element. Google uses them to understand and categorize your page, and they're the first thing users see in search results — directly affecting click-through rate.",
+                  fix: "Keep titles 30-60 characters. Front-load the primary keyword. Include your brand name at the end. Make it descriptive and compelling — it's your search result ad copy.",
+                  impact: "A well-optimized title tag can increase organic click-through rate by 20-30%. It's also the most direct signal to Google about what your page covers."
+                },
+                {
+                  key: 'metaDescription',
+                  score: seo.metaDescription ? (seo.metaDescriptionLength >= 120 && seo.metaDescriptionLength <= 160 ? 15 : seo.metaDescriptionLength > 0 ? 8 : 0) : 0,
+                  max: 15,
+                  title: 'Meta Description',
+                  status: seo.metaDescription ? (seo.metaDescriptionLength >= 120 && seo.metaDescriptionLength <= 160 ? 'good' : 'warn') : 'fail',
+                  detail: seo.metaDescription ? `${seo.metaDescriptionLength} chars — ideal is 120–160` : 'Missing meta description',
+                  what: "The short description shown under your page title in Google search results — not a direct ranking factor but critical for click-through rate.",
+                  why: "While Google may override your meta description, a well-written one controls the narrative in search results. It's the difference between a user clicking your result vs a competitor's.",
+                  fix: "Write 120-160 chars. Include your primary keyword naturally. End with a clear call to action. Treat it as ad copy — be specific about what the user will find on the page.",
+                  impact: "Pages with optimized meta descriptions get 5-10% higher click-through rates. Over months, this compounds into significantly more traffic without touching rankings."
+                },
+                {
+                  key: 'headingStructure',
+                  score: (() => { const h1Count = (seo.headings?.h1 || []).length; const h2Count = (seo.headings?.h2 || []).length; return h1Count === 1 ? (h2Count > 0 ? 20 : 12) : h1Count === 0 ? 0 : 8; })(),
+                  max: 20,
+                  title: 'Heading Structure',
+                  status: (() => { const h1Count = (seo.headings?.h1 || []).length; return h1Count === 1 ? 'good' : 'fail'; })(),
+                  detail: `H1: ${(seo.headings?.h1 || []).length}, H2: ${(seo.headings?.h2 || []).length}, H3: ${(seo.headings?.h3 || []).length}`,
+                  what: "The hierarchy of heading tags (H1-H6) that structure your page content — your H1 is the page title, H2s are main sections, H3s are subsections.",
+                  why: "Headings are how both search engines and AI engines navigate your page. One clear H1 tells Google exactly what the page is about. Multiple H1s create confusion and split ranking signals.",
+                  fix: "Use exactly one H1 per page (your primary keyword phrase). Use H2s for main sections (3-7 per page). Use H3s for subsections. Make headings descriptive — include relevant keywords naturally.",
+                  impact: "Correct heading structure helps Google assign your page to the right queries. It also makes your content parseable by AI engines — poorly structured pages get skipped when AI engines look for answers to cite."
+                },
+                {
+                  key: 'imageOptimization',
+                  score: seo.images ? Math.round(((seo.images.withAlt || 0) / Math.max(1, seo.images.total)) * 20) : 10,
+                  max: 20,
+                  title: 'Image Optimization',
+                  status: seo.images ? ((seo.images.withoutAlt || 0) === 0 ? 'good' : 'warn') : 'warn',
+                  detail: seo.images ? `${seo.images.withAlt}/${seo.images.total} images have alt text` : 'No image data',
+                  what: "Whether your images have descriptive alt text — the text that describes an image to screen readers, search engines, and AI engines that can't 'see' images.",
+                  why: "Google Images is a significant traffic source. Alt text tells Google what each image depicts, making them discoverable. Missing alt text also hurts accessibility scores and can affect overall page rankings.",
+                  fix: "Add descriptive alt text to every image. Be specific: 'Vancouver SEO agency team meeting' not 'team photo'. Include relevant keywords where natural. Keep alt text under 125 characters.",
+                  impact: "Images with alt text appear in Google Image Search — an often-overlooked traffic channel. For local businesses, images with location-specific alt text drive highly qualified local traffic."
+                },
+                {
+                  key: 'internalLinking',
+                  score: Math.min(20, (seo.links?.internal || 0) * 2),
+                  max: 20,
+                  title: 'Internal Linking',
+                  status: (seo.links?.internal || 0) >= 5 ? 'good' : (seo.links?.internal || 0) >= 2 ? 'warn' : 'fail',
+                  detail: `${seo.links?.internal || 0} internal links, ${seo.links?.external || 0} external links`,
+                  what: "Links from one page on your site to another — the connective tissue that tells Google which pages are most important and how your content is related.",
+                  why: "Internal links pass 'link equity' (ranking power) through your site. Pages with more internal links pointing to them rank higher. They also help Google discover and index all your pages.",
+                  fix: "Link to your most important pages from every page. Use descriptive anchor text (not 'click here'). Aim for 3-10 internal links per page. Create a logical content hierarchy — blog posts link to service pages, service pages link to contact.",
+                  impact: "A strong internal linking strategy can increase rankings for target pages by 10-30% with no additional content needed — you're redistributing existing link equity more effectively."
+                }
+              ].map(item => {
+                const pct = Math.round((item.score / item.max) * 100);
+                const col = item.status === 'good' ? "#10b981" : item.status === 'warn' ? "#f59e0b" : "#ef4444";
+                return (
+                  <details key={item.key} className="border border-[var(--border-primary)] rounded-xl overflow-hidden group">
+                    <summary className="flex items-center justify-between p-4 cursor-pointer hover:bg-[var(--bg-secondary)] transition-colors list-none">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{background:col}}/>
+                        <div className="min-w-0">
+                          <span className="text-sm font-medium">{item.title}</span>
+                          <span className="text-xs text-[var(--text-muted)] ml-2">{item.detail}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <div className="w-20 h-1.5 bg-[var(--ring-track)] rounded-full overflow-hidden">
+                          <div className="h-1.5 rounded-full" style={{width:`${pct}%`,background:col}}/>
+                        </div>
+                        <span className="text-xs font-mono font-bold w-12 text-right" style={{color:col}}>{item.score}/{item.max}</span>
+                        <svg className="w-4 h-4 text-[var(--text-muted)] group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
+                      </div>
+                    </summary>
+                    <div className="border-t border-[var(--border-primary)] p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--bg-secondary)]">
+                      <div><p className="text-xs font-semibold text-[var(--accent)] uppercase mb-1">What it measures</p><p className="text-xs text-[var(--text-muted)]">{item.what}</p></div>
+                      <div><p className="text-xs font-semibold text-[var(--status-yellow)] uppercase mb-1">Why it matters</p><p className="text-xs text-[var(--text-muted)]">{item.why}</p></div>
+                      <div><p className="text-xs font-semibold text-[var(--status-blue)] uppercase mb-1">How to fix it</p><p className="text-xs text-[var(--text-muted)]">{item.fix}</p></div>
+                      <div><p className="text-xs font-semibold text-[var(--status-green)] uppercase mb-1">Business impact</p><p className="text-xs text-[var(--text-muted)]">{item.impact}</p></div>
+                    </div>
+                  </details>
+                );
+              })}
+            </div>
+          )}
+
+
+          {/* Agency Keywords Deep-Dive */}
+          {tab === 'keywords' && kw && userTier === 'agency' && (
+            <div className="mt-4 space-y-3">
+              <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Agency Deep-Dive — Keyword Analysis</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div className="border border-[var(--border-primary)] rounded-xl p-4 bg-[var(--bg-secondary)]">
+                  <p className="text-xs font-semibold text-[var(--accent)] uppercase mb-2">Keyword Density Health</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-2">Ideal keyword density is 1-3%. Above 3% risks keyword stuffing penalties. Below 0.5% means the topic isn't prominent enough for Google to associate you with it.</p>
+                  {kw.topKeywords?.slice(0,3).map((k: any) => (
+                    <div key={k.word} className="flex items-center justify-between text-xs mb-1">
+                      <span className="font-mono text-[var(--text-secondary)]">{k.word}</span>
+                      <span className={k.density > 3 ? 'text-[var(--status-red)]' : k.density >= 1 ? 'text-[var(--status-green)]' : 'text-[var(--status-yellow)]'}>{k.density}%</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border border-[var(--border-primary)] rounded-xl p-4 bg-[var(--bg-secondary)]">
+                  <p className="text-xs font-semibold text-[var(--status-yellow)] uppercase mb-2">Content Volume</p>
+                  <p className="text-2xl font-bold font-mono mb-1">{kw.totalWords?.toLocaleString()}</p>
+                  <p className="text-xs text-[var(--text-muted)]">words indexed</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-2">{(kw.totalWords || 0) < 300 ? 'Critical: under 300 words. Google may not index this page.' : (kw.totalWords || 0) < 600 ? 'Low: aim for 600+ words for competitive queries.' : (kw.totalWords || 0) < 1500 ? 'Good: solid content volume for most queries.' : 'Excellent: long-form content that signals topical depth.'}</p>
+                </div>
+                <div className="border border-[var(--border-primary)] rounded-xl p-4 bg-[var(--bg-secondary)]">
+                  <p className="text-xs font-semibold text-[var(--status-blue)] uppercase mb-2">Keyword Diversity</p>
+                  <p className="text-2xl font-bold font-mono mb-1">{kw.topKeywords?.length || 0}</p>
+                  <p className="text-xs text-[var(--text-muted)]">unique significant terms</p>
+                  <p className="text-xs text-[var(--text-muted)] mt-2">{(kw.topKeywords?.length || 0) < 10 ? 'Low topical breadth — expand content to cover related terms.' : (kw.topKeywords?.length || 0) < 30 ? 'Moderate — good foundation, room to expand.' : 'Strong topical coverage across multiple keyword clusters.'}</p>
+                </div>
+              </div>
+              <div className="border border-[var(--border-primary)] rounded-xl p-4 bg-[var(--bg-secondary)]">
+                <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Why Keywords Matter for AI Search</p>
+                <p className="text-xs text-[var(--text-muted)]">AI engines like ChatGPT and Perplexity don't just match keywords — they assess whether your page demonstrates topical authority. A page that covers a topic comprehensively with related terms and synonyms signals expertise. Keyword diversity (covering the full semantic field of a topic) is increasingly more important than keyword density alone. Focus on answering every related question, not just repeating the main keyword.</p>
+              </div>
+            </div>
+          )}
+
           {/* Keywords tab */}
           {tab === 'keywords' && kw && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
