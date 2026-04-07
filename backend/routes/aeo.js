@@ -237,7 +237,7 @@ router.post('/score', async (req, res) => {
     // Speakable schema (explicit markup for voice)
     const hasSpeakable = html.includes('"speakable"') || html.includes('"SpeakableSpecification"') || html.includes('speakable');
     // Also credit pages with WebPage schema + clear heading structure (implied speakability)
-    const hasWebPageSchema = schemas.includes('WebPage') || schemas.includes('WebSite');
+    const hasWebPageSchema = html.includes(""WebPage"") || html.includes(""WebSite"");
     if (hasSpeakable) {
       voiceScore += 4;
       signals.speakableSchema = true;
