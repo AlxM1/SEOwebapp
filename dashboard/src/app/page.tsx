@@ -6,11 +6,11 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://analysis.seoh.ca/ap
 // ─── Tier helpers ─────────────────────────────────────────────────────────────
 const TIER_ORDER = ['free', 'starter', 'pro', 'agency'];
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Analysis:   { bg: 'bg-teal-950',   text: 'text-teal-400',   border: 'border-teal-800' },
-  Monitoring: { bg: 'bg-orange-950', text: 'text-orange-400', border: 'border-orange-800' },
-  Admin:      { bg: 'bg-red-950',    text: 'text-red-500 dark:text-red-400',    border: 'border-red-800' },
-  Billing:    { bg: 'bg-purple-950', text: 'text-purple-400', border: 'border-purple-800' },
-  Auth:       { bg: 'bg-blue-950',   text: 'text-blue-400',   border: 'border-blue-800' },
+  Analysis:   { bg: 'bg-[var(--status-teal-bg)]',   text: 'text-[var(--accent)]',   border: 'border-[var(--accent)]' },
+  Monitoring: { bg: 'bg-[var(--status-orange-bg)]', text: 'text-[var(--status-orange)]', border: 'border-[var(--status-orange-border)]' },
+  Admin:      { bg: 'bg-[var(--status-red-bg)]',    text: 'text-[var(--status-red)] dark:text-[var(--status-red)]',    border: 'border-[var(--status-red-border)]' },
+  Billing:    { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600', border: 'border-purple-200' },
+  Auth:       { bg: 'bg-[var(--status-blue-bg)]',   text: 'text-[var(--status-blue)]',   border: 'border-[var(--status-blue-border)]' },
 };
 const CATEGORY_ICONS: Record<string, string> = {
   Analysis:   '🔍',
@@ -20,7 +20,7 @@ const CATEGORY_ICONS: Record<string, string> = {
   Auth:       '🔐',
 };
 function getCategoryColor(cat: string) {
-  return CATEGORY_COLORS[cat] || { bg: 'bg-gray-900', text: 'text-[var(--text-secondary)]', border: 'border-gray-700' };
+  return CATEGORY_COLORS[cat] || { bg: 'bg-gray-900', text: 'text-[var(--text-secondary)]', border: 'border-[var(--border-primary)]' };
 }
 function tierLabel(tier: string) {
   if (!tier || tier === 'free') return 'Free+';
@@ -31,11 +31,11 @@ function tierLabel(tier: string) {
 }
 function tierColor(tier: string) {
   return {
-    free:    'bg-gray-800 text-gray-300',
-    starter: 'bg-blue-950 text-blue-300',
-    pro:     'bg-purple-950 text-purple-300',
-    agency:  'bg-teal-950 text-teal-300',
-  }[tier] || 'bg-gray-800 text-gray-300';
+    free:    'bg-[var(--bg-secondary)] text-[var(--text-secondary)]',
+    starter: 'bg-[var(--status-blue-bg)] text-[var(--status-blue)]',
+    pro:     'bg-purple-50 dark:bg-purple-950 text-purple-300',
+    agency:  'bg-[var(--status-teal-bg)] text-[var(--accent)]',
+  }[tier] || 'bg-[var(--bg-secondary)] text-[var(--text-secondary)]';
 }
 function userCanAccess(featureTier: string, userTier: string) {
   return TIER_ORDER.indexOf(userTier) >= TIER_ORDER.indexOf(featureTier || 'free');
@@ -88,7 +88,7 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
                   {tierLabel(feature.tier)}
                 </span>
                 {feature.added_at && new Date(feature.added_at) > new Date(Date.now() - 7 * 86400000) && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-green-950 text-green-400 font-medium">New</span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--status-green-bg)] text-[var(--status-green)] font-medium">New</span>
                 )}
               </div>
             </div>
@@ -98,16 +98,16 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
 
         <div className="p-6 space-y-5">
           {/* Description */}
-          <p className="text-sm text-gray-300 leading-relaxed">{feature.description}</p>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{feature.description}</p>
 
           {/* Endpoint */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Endpoint</h3>
             <div className="flex items-center gap-2 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg px-4 py-3">
-              <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${feature.method === 'GET' ? 'bg-teal-900 text-teal-400' : 'bg-orange-900 text-orange-400'}`}>
+              <span className={`text-xs font-bold font-mono px-2 py-0.5 rounded ${feature.method === 'GET' ? 'bg-teal-900 text-[var(--accent)]' : 'bg-orange-900 text-[var(--status-orange)]'}`}>
                 {feature.method}
               </span>
-              <code className="text-sm font-mono text-gray-300 flex-1">{feature.endpoint}</code>
+              <code className="text-sm font-mono text-[var(--text-secondary)] flex-1">{feature.endpoint}</code>
             </div>
           </div>
 
@@ -115,7 +115,7 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Required Headers</h3>
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg px-4 py-3">
-              <code className="text-sm font-mono text-gray-300">X-Api-Key: YOUR_KEY</code>
+              <code className="text-sm font-mono text-[var(--text-secondary)]">X-Api-Key: YOUR_KEY</code>
             </div>
           </div>
 
@@ -167,13 +167,13 @@ function FeatureModal({ feature, onClose, apiKey }: { feature: FeatureItem; onCl
 
           {/* Added date */}
           {feature.added_at && (
-            <p className="text-xs text-gray-600">Added: {new Date(feature.added_at).toLocaleDateString('en-CA')}</p>
+            <p className="text-xs text-[var(--text-muted)]">Added: {new Date(feature.added_at).toLocaleDateString('en-CA')}</p>
           )}
 
           {/* Docs link */}
           <div className="pt-2 border-t border-[var(--border-primary)]">
             <a href="https://docs.seoh.ca" target="_blank" rel="noopener noreferrer"
-              className="text-sm text-teal-400 hover:text-teal-300 transition-colors">
+              className="text-sm text-[var(--accent)] hover:text-[var(--accent)] transition-colors">
               View full documentation →
             </a>
           </div>
@@ -207,7 +207,7 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-sm font-semibold truncate">{feature.name}</span>
             {isNew && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-950 text-green-400 font-medium whitespace-nowrap">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[var(--status-green-bg)] text-[var(--status-green)] font-medium whitespace-nowrap">
                 New
               </span>
             )}
@@ -224,7 +224,7 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
         <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${tierColor(feature.tier)}`}>
           {tierLabel(feature.tier)}
         </span>
-        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${feature.method === 'GET' ? 'bg-teal-900/50 text-teal-400' : 'bg-orange-900/50 text-orange-400'}`}>
+        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${feature.method === 'GET' ? 'bg-teal-900/50 text-[var(--accent)]' : 'bg-[var(--status-orange-bg)] text-[var(--status-orange)]'}`}>
           {feature.method}
         </span>
       </div>
@@ -237,7 +237,7 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
           </pre>
           <button
             onClick={() => onCopy(curlText, curlId)}
-            className="absolute top-1.5 right-1.5 text-[10px] text-gray-600 hover:text-[var(--text-primary)] bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded transition-colors">
+            className="absolute top-1.5 right-1.5 text-[10px] text-[var(--text-muted)] hover:text-[var(--text-primary)] bg-[var(--bg-secondary)] px-1.5 py-0.5 rounded transition-colors">
             {copied === curlId ? '✓' : 'Copy'}
           </button>
         </div>
@@ -245,7 +245,7 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
 
       {/* Added date */}
       {feature.added_at && (
-        <p className="text-[10px] text-gray-600">Added: {new Date(feature.added_at).toLocaleDateString('en-CA')}</p>
+        <p className="text-[10px] text-[var(--text-muted)]">Added: {new Date(feature.added_at).toLocaleDateString('en-CA')}</p>
       )}
 
       {/* Actions */}
@@ -253,11 +253,11 @@ function FeatureCard({ feature, onLearnMore, onCopy, copied, userTier, apiKey }:
         {accessible ? (
           <button
             onClick={onLearnMore}
-            className="flex-1 bg-[var(--bg-secondary)] hover:bg-[#222] border border-[var(--border-secondary)] hover:border-teal-800 text-xs font-medium py-1.5 rounded-lg transition-colors">
+            className="flex-1 bg-[var(--bg-secondary)] hover:bg-[#222] border border-[var(--border-secondary)] hover:border-[var(--accent)] text-xs font-medium py-1.5 rounded-lg transition-colors">
             Learn More
           </button>
         ) : (
-          <div className="flex-1 text-center text-[10px] text-gray-600 py-1.5">
+          <div className="flex-1 text-center text-[10px] text-[var(--text-muted)] py-1.5">
             Requires {tierLabel(feature.tier)}
           </div>
         )}
@@ -325,7 +325,7 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)]">All Features</h2>
         {features && (
-          <span className="text-xs text-gray-600">{filtered.length} of {features.length} APIs</span>
+          <span className="text-xs text-[var(--text-muted)]">{filtered.length} of {features.length} APIs</span>
         )}
       </div>
 
@@ -340,14 +340,14 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
         <select
           value={filterCat}
           onChange={e => setFilterCat(e.target.value)}
-          className="bg-[var(--bg-card)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-gray-300">
+          className="bg-[var(--bg-card)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-[var(--text-secondary)]">
           <option value="">All Categories</option>
           {categories.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
         <select
           value={filterTier}
           onChange={e => setFilterTier(e.target.value)}
-          className="bg-[var(--bg-card)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-gray-300">
+          className="bg-[var(--bg-card)] border border-[var(--border-secondary)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-teal-500 text-[var(--text-secondary)]">
           <option value="">All Tiers</option>
           {TIER_ORDER.map(t => <option key={t} value={t}>{tierLabel(t)}</option>)}
         </select>
@@ -361,7 +361,7 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
         </div>
       )}
       {error && (
-        <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2 mb-4">{error}</p>
+        <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Grid */}
@@ -406,7 +406,7 @@ function PricingCard({ tier, price, analyses, features, currentTier, onUpgrade }
   const isDowngrade = ['free','starter','pro','agency'].indexOf(tier) < ['free','starter','pro','agency'].indexOf(currentTier);
   return (
     <div className={`bg-[var(--bg-secondary)] border rounded-xl p-5 ${isCurrent ? 'border-teal-500' : 'border-[var(--border-primary)]'}`}>
-      {isCurrent && <div className="text-xs text-teal-400 font-semibold uppercase mb-2">Current Plan</div>}
+      {isCurrent && <div className="text-xs text-[var(--accent)] font-semibold uppercase mb-2">Current Plan</div>}
       <div className="flex items-end gap-1 mb-1">
         <span className="text-2xl font-bold">{price}</span>
         {price !== '$0' && <span className="text-[var(--text-secondary)] text-sm mb-1">/mo</span>}
@@ -419,7 +419,7 @@ function PricingCard({ tier, price, analyses, features, currentTier, onUpgrade }
       {!isCurrent && !isDowngrade && (
         <button onClick={onUpgrade} className="w-full bg-teal-600 hover:bg-teal-700 rounded-lg py-2 text-sm font-medium transition-colors">Upgrade</button>
       )}
-      {isDowngrade && <div className="text-xs text-gray-600 text-center">Contact us to downgrade</div>}
+      {isDowngrade && <div className="text-xs text-[var(--text-muted)] text-center">Contact us to downgrade</div>}
     </div>
   );
 }
@@ -505,7 +505,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {loading ? 'Analyzing…' : 'Run Analysis'}
         </button>
       </div>
-      {error && <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2 mb-4">{error}</p>}
+      {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>}
       {loading && (
         <div className="flex items-center gap-3 py-10 justify-center text-[var(--text-secondary)] text-sm">
           <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -563,18 +563,18 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
               <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4 space-y-3">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Page Meta</h3>
                 <div>
-                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Title <span className="text-gray-600">({seo.titleLength} chars)</span></p>
-                  <p className="text-sm text-gray-200">{seo.title}</p>
+                  <p className="text-xs text-[var(--text-muted)] mb-0.5">Title <span className="text-[var(--text-muted)]">({seo.titleLength} chars)</span></p>
+                  <p className="text-sm text-[var(--text-secondary)]">{seo.title}</p>
                 </div>
                 {seo.metaDescription && (
                   <div>
                     <p className="text-xs text-[var(--text-muted)] mb-0.5">
                       Meta Description&nbsp;
-                      <span className={seo.metaDescriptionLength > 160 ? 'text-amber-400' : 'text-gray-600'}>
+                      <span className={seo.metaDescriptionLength > 160 ? 'text-amber-400' : 'text-[var(--text-muted)]'}>
                         ({seo.metaDescriptionLength} chars{seo.metaDescriptionLength > 160 ? ' — too long' : ''})
                       </span>
                     </p>
-                    <p className="text-sm text-gray-300 line-clamp-2">{seo.metaDescription}</p>
+                    <p className="text-sm text-[var(--text-secondary)] line-clamp-2">{seo.metaDescription}</p>
                   </div>
                 )}
                 <div className="grid grid-cols-4 gap-3 pt-1">
@@ -584,7 +584,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     { label: 'Canonical', ok: !!seo.canonical },
                   ].map(i => (
                     <div key={i.label} className="text-center">
-                      <div className={`text-lg ${i.ok ? 'text-green-400' : 'text-red-500'}`}>{i.ok ? '✓' : '✗'}</div>
+                      <div className={`text-lg ${i.ok ? 'text-[var(--status-green)]' : 'text-[var(--status-red)]'}`}>{i.ok ? '✓' : '✗'}</div>
                       <div className="text-xs text-[var(--text-muted)]">{i.label}</div>
                     </div>
                   ))}
@@ -615,7 +615,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Images</h3>
                     <div className="flex gap-3 text-sm">
                       <span>{seo.images.total} total</span>
-                      <span className="text-green-400">{seo.images.withAlt} with alt</span>
+                      <span className="text-[var(--status-green)]">{seo.images.withAlt} with alt</span>
                       {seo.images.withoutAlt > 0 && <span className="text-amber-400">{seo.images.withoutAlt} missing alt</span>}
                     </div>
                   </div>
@@ -630,10 +630,10 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-2">Headings</h3>
                   <div className="space-y-1.5">
                     {seo.headings.h1?.slice(0,2).map((h: string, i: number) => (
-                      <div key={i} className="flex gap-2 text-sm"><span className="text-teal-400 font-mono text-xs w-6 mt-0.5 shrink-0">H1</span><span className="text-gray-200">{h}</span></div>
+                      <div key={i} className="flex gap-2 text-sm"><span className="text-[var(--accent)] font-mono text-xs w-6 mt-0.5 shrink-0">H1</span><span className="text-[var(--text-secondary)]">{h}</span></div>
                     ))}
                     {seo.headings.h2?.slice(0,3).map((h: string, i: number) => (
-                      <div key={i} className="flex gap-2 text-sm"><span className="text-blue-400 font-mono text-xs w-6 mt-0.5 shrink-0">H2</span><span className="text-[var(--text-secondary)]">{h}</span></div>
+                      <div key={i} className="flex gap-2 text-sm"><span className="text-[var(--status-blue)] font-mono text-xs w-6 mt-0.5 shrink-0">H2</span><span className="text-[var(--text-secondary)]">{h}</span></div>
                     ))}
                   </div>
                 </div>
@@ -645,17 +645,17 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2">Issues</h3>
                     <ul className="space-y-1.5">
                       {seo.issues.map((i: string, idx: number) => (
-                        <li key={idx} className="text-xs text-gray-300 flex gap-1.5"><span className="text-amber-400 shrink-0 mt-0.5">⚠</span>{i}</li>
+                        <li key={idx} className="text-xs text-[var(--text-secondary)] flex gap-1.5"><span className="text-amber-400 shrink-0 mt-0.5">⚠</span>{i}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 {seo.strengths?.length > 0 && (
                   <div className="bg-[var(--bg-card)] border border-green-900/40 rounded-lg p-4">
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-green-400 mb-2">Strengths</h3>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--status-green)] mb-2">Strengths</h3>
                     <ul className="space-y-1.5">
                       {seo.strengths.map((s: string, idx: number) => (
-                        <li key={idx} className="text-xs text-gray-300 flex gap-1.5"><span className="text-green-400 shrink-0 mt-0.5">✓</span>{s}</li>
+                        <li key={idx} className="text-xs text-[var(--text-secondary)] flex gap-1.5"><span className="text-[var(--status-green)] shrink-0 mt-0.5">✓</span>{s}</li>
                       ))}
                     </ul>
                   </div>
@@ -709,12 +709,12 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
               )}
 
               {geo.recommendations?.length > 0 && (
-                <div className="bg-[var(--bg-card)] border border-teal-900/40 rounded-lg p-4">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3">Recommendations to Improve AI Visibility</h3>
+                <div className="bg-[var(--bg-card)] border border-[var(--accent)] rounded-lg p-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] mb-3">Recommendations to Improve AI Visibility</h3>
                   <ul className="space-y-2">
                     {geo.recommendations.map((r: string, i: number) => (
                       <li key={i} className="text-sm text-[var(--text-muted)] flex gap-2">
-                        <span className="text-teal-400 shrink-0 mt-0.5">→</span>{r}
+                        <span className="text-[var(--accent)] shrink-0 mt-0.5">→</span>{r}
                       </li>
                     ))}
                   </ul>
@@ -765,12 +765,12 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   </div>
 
                   {aeo.recommendations?.length > 0 && (
-                    <div className="bg-[var(--bg-card)] border border-teal-900/40 rounded-lg p-4">
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-teal-400 mb-3">Recommendations to Improve AEO</h3>
+                    <div className="bg-[var(--bg-card)] border border-[var(--accent)] rounded-lg p-4">
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--accent)] mb-3">Recommendations to Improve AEO</h3>
                       <ul className="space-y-2">
                         {aeo.recommendations.map((r: string, i: number) => (
                           <li key={i} className="text-sm text-[var(--text-muted)] flex gap-2">
-                            <span className="text-teal-400 shrink-0 mt-0.5">→</span>{r}
+                            <span className="text-[var(--accent)] shrink-0 mt-0.5">→</span>{r}
                           </li>
                         ))}
                       </ul>
@@ -817,10 +817,10 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     </summary>
                     {d && (
                       <div className="border-t border-[var(--border-primary)] p-4 grid grid-cols-1 md:grid-cols-2 gap-3 bg-[var(--bg-secondary)]">
-                        <div><p className="text-xs font-semibold text-teal-400 uppercase mb-1">What it measures</p><p className="text-xs text-[var(--text-muted)]">{d.what}</p></div>
-                        <div><p className="text-xs font-semibold text-yellow-400 uppercase mb-1">Why it matters</p><p className="text-xs text-[var(--text-muted)]">{d.why}</p></div>
-                        <div><p className="text-xs font-semibold text-blue-400 uppercase mb-1">How to fix it</p><p className="text-xs text-[var(--text-muted)]">{d.fix}</p></div>
-                        <div><p className="text-xs font-semibold text-green-400 uppercase mb-1">Business impact</p><p className="text-xs text-[var(--text-muted)]">{d.impact}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--accent)] uppercase mb-1">What it measures</p><p className="text-xs text-[var(--text-muted)]">{d.what}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-yellow)] uppercase mb-1">Why it matters</p><p className="text-xs text-[var(--text-muted)]">{d.why}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-blue)] uppercase mb-1">How to fix it</p><p className="text-xs text-[var(--text-muted)]">{d.fix}</p></div>
+                        <div><p className="text-xs font-semibold text-[var(--status-green)] uppercase mb-1">Business impact</p><p className="text-xs text-[var(--text-muted)]">{d.impact}</p></div>
                       </div>
                     )}
                   </details>
@@ -833,25 +833,25 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {tab === 'keywords' && kw && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-                Top Keywords <span className="text-gray-600 normal-case font-normal">— {kw.totalWords} words indexed</span>
+                Top Keywords <span className="text-[var(--text-muted)] normal-case font-normal">— {kw.totalWords} words indexed</span>
               </h3>
               <div className="space-y-2.5">
                 {kw.topKeywords?.slice(0, 15).map((k: any) => (
                   <div key={k.word} className="flex items-center gap-3">
-                    <span className="text-sm font-mono w-28 text-gray-300 truncate">{k.word}</span>
-                    <div className="flex-1 bg-gray-800 rounded-full h-1.5">
+                    <span className="text-sm font-mono w-28 text-[var(--text-secondary)] truncate">{k.word}</span>
+                    <div className="flex-1 bg-[var(--bg-secondary)] rounded-full h-1.5">
                       <div className="bg-teal-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, k.density * 12)}%` }} />
                     </div>
                     <span className="text-xs text-[var(--text-muted)] w-20 text-right">{k.count}× ({k.density}%)</span>
                     <div className="flex gap-1 w-16 justify-end">
-                      {k.inTitle && <span className="text-xs bg-blue-900/40 text-blue-400 px-1.5 py-0.5 rounded">T</span>}
-                      {k.inH1 && <span className="text-xs bg-teal-900/40 text-teal-400 px-1.5 py-0.5 rounded">H1</span>}
-                      {k.inMeta && <span className="text-xs bg-purple-900/40 text-purple-400 px-1.5 py-0.5 rounded">M</span>}
+                      {k.inTitle && <span className="text-xs bg-blue-900/40 text-[var(--status-blue)] px-1.5 py-0.5 rounded">T</span>}
+                      {k.inH1 && <span className="text-xs bg-teal-900/40 text-[var(--accent)] px-1.5 py-0.5 rounded">H1</span>}
+                      {k.inMeta && <span className="text-xs bg-purple-900/40 text-purple-600 px-1.5 py-0.5 rounded">M</span>}
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-600 mt-3">T = in title · H1 = in heading · M = in meta description</p>
+              <p className="text-xs text-[var(--text-muted)] mt-3">T = in title · H1 = in heading · M = in meta description</p>
             </div>
           )}
 
@@ -870,7 +870,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   Analyzing social presence...
                 </div>
               )}
-              {socialError && <p className="text-red-500 dark:text-red-400 text-sm">{socialError}</p>}
+              {socialError && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm">{socialError}</p>}
               {social && (
                 <div className="space-y-4">
                   {/* Overall score */}
@@ -885,16 +885,16 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   {/* Platform grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {social.platforms && Object.entries(social.platforms).map(([platform, data]: [string, any]) => (
-                      <div key={platform} className={`border rounded-lg p-3 ${data.found ? 'border-teal-800 bg-teal-950/20' : 'border-[var(--border-primary)] bg-[var(--bg-secondary)]'}`}>
+                      <div key={platform} className={`border rounded-lg p-3 ${data.found ? 'border-[var(--accent)] bg-teal-50/80 dark:bg-[var(--status-teal-bg)]/20' : 'border-[var(--border-primary)] bg-[var(--bg-secondary)]'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium capitalize">{platform === 'twitter' ? 'X (Twitter)' : platform}</span>
-                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-green-400' : data.score >= 30 ? 'text-yellow-400' : 'text-red-500 dark:text-red-400'}`}>{data.score}/100</span>
+                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-[var(--status-green)]' : data.score >= 30 ? 'text-[var(--status-yellow)]' : 'text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>{data.score}/100</span>
                         </div>
                         <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden mb-1">
-                          <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-green-500' : data.score >= 30 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{width: `${data.score}%`}} />
+                          <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-[var(--status-green-bg)]0' : data.score >= 30 ? 'bg-[var(--status-yellow-bg)]0' : 'bg-[var(--status-red-bg)]0'}`} style={{width: `${data.score}%`}} />
                         </div>
                         <p className="text-xs text-[var(--text-muted)]">{data.notes}</p>
-                        {data.url && <a href={data.url} target="_blank" rel="noopener" className="text-xs text-teal-400 hover:underline mt-1 block truncate">{data.url}</a>}
+                        {data.url && <a href={data.url} target="_blank" rel="noopener" className="text-xs text-[var(--accent)] hover:underline mt-1 block truncate">{data.url}</a>}
                       </div>
                     ))}
                   </div>
@@ -904,9 +904,9 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     <div className="border border-[var(--border-primary)] rounded-lg p-3 mt-3">
                       <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Social Meta Tags</p>
                       <div className="flex gap-3">
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-green-950 text-green-400' : 'bg-red-950 text-red-500 dark:text-red-400'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
                       </div>
                     </div>
                   )}
@@ -919,7 +919,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                         {social.recommendations.map((rec: any, i: number) => (
                           <div key={i} className="border border-[var(--border-primary)] rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-red-950 text-red-500 dark:text-red-400' : rec.priority === 'medium' ? 'bg-yellow-950 text-yellow-400' : 'bg-green-950 text-green-400'}`}>{rec.priority}</span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]' : rec.priority === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-green-bg)] text-[var(--status-green)]'}`}>{rec.priority}</span>
                               <span className="text-xs font-medium capitalize">{rec.platform}</span>
                             </div>
                             <p className="text-xs text-[var(--text-muted)]">{rec.recommendation}</p>
@@ -972,7 +972,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   <p className="text-xs text-[var(--text-muted)]">Scoring each competitor across SEO, GEO, and AEO</p>
                 </div>
               )}
-              {competitorsError && <p className="text-red-500 dark:text-red-400 text-sm">{competitorsError}</p>}
+              {competitorsError && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm">{competitorsError}</p>}
               {competitors && (
                 <div className="space-y-4">
                   {/* Business info */}
@@ -996,22 +996,22 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                       </thead>
                       <tbody>
                         {/* Your scores */}
-                        <tr className="border-b border-[var(--border-primary)] bg-teal-950/20">
-                          <td className="py-2 font-medium text-teal-400">You ({seo?.url?.replace(/https?:\/\//, '').split('/')[0]})</td>
-                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.seo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.seo || 0}</span></td>
-                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.geo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.geo || 0}</span></td>
-                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.aeo || 0) >= 70 ? 'text-green-400' : 'text-yellow-400'}`}>{competitors.yourScores?.aeo || 0}</span></td>
+                        <tr className="border-b border-[var(--border-primary)] bg-teal-50/80 dark:bg-[var(--status-teal-bg)]/20">
+                          <td className="py-2 font-medium text-[var(--accent)]">You ({seo?.url?.replace(/https?:\/\//, '').split('/')[0]})</td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.seo || 0) >= 70 ? 'text-[var(--status-green)]' : 'text-[var(--status-yellow)]'}`}>{competitors.yourScores?.seo || 0}</span></td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.geo || 0) >= 70 ? 'text-[var(--status-green)]' : 'text-[var(--status-yellow)]'}`}>{competitors.yourScores?.geo || 0}</span></td>
+                          <td className="text-center py-2"><span className={`font-mono ${(competitors.yourScores?.aeo || 0) >= 70 ? 'text-[var(--status-green)]' : 'text-[var(--status-yellow)]'}`}>{competitors.yourScores?.aeo || 0}</span></td>
                         </tr>
                         {/* Competitors */}
                         {competitors.competitors?.map((c: any, i: number) => (
                           <tr key={i} className="border-b border-[var(--border-primary)]">
                             <td className="py-2">
                               <p className="font-medium">{c.name}</p>
-                              <a href={c.url} target="_blank" rel="noopener" className="text-teal-400 hover:underline truncate block max-w-[200px]">{c.url?.replace(/https?:\/\//, '')}</a>
+                              <a href={c.url} target="_blank" rel="noopener" className="text-[var(--accent)] hover:underline truncate block max-w-[200px]">{c.url?.replace(/https?:\/\//, '')}</a>
                             </td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.seo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.geo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-red-500 dark:text-red-400' : 'text-green-400'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.seo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.geo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
                           </tr>
                         ))}
                       </tbody>
@@ -1021,20 +1021,20 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   {/* SWOT Insights */}
                   {competitors.insights && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
-                      <div className="border border-green-800 rounded-lg p-3 bg-green-950/20">
-                        <p className="text-xs font-semibold text-green-400 uppercase mb-2">Strengths</p>
+                      <div className="border border-[var(--status-green-border)] rounded-lg p-3 bg-[var(--status-green-bg)]/20">
+                        <p className="text-xs font-semibold text-[var(--status-green)] uppercase mb-2">Strengths</p>
                         <ul className="space-y-1">{competitors.insights.strengths?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
-                      <div className="border border-red-800 rounded-lg p-3 bg-red-950/20">
-                        <p className="text-xs font-semibold text-red-500 dark:text-red-400 uppercase mb-2">Weaknesses</p>
+                      <div className="border border-[var(--status-red-border)] rounded-lg p-3 bg-[var(--status-red-bg)]/20">
+                        <p className="text-xs font-semibold text-[var(--status-red)] dark:text-[var(--status-red)] uppercase mb-2">Weaknesses</p>
                         <ul className="space-y-1">{competitors.insights.weaknesses?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
-                      <div className="border border-blue-800 rounded-lg p-3 bg-blue-950/20">
-                        <p className="text-xs font-semibold text-blue-400 uppercase mb-2">Opportunities</p>
+                      <div className="border border-[var(--status-blue-border)] rounded-lg p-3 bg-[var(--status-blue-bg)]/20">
+                        <p className="text-xs font-semibold text-[var(--status-blue)] uppercase mb-2">Opportunities</p>
                         <ul className="space-y-1">{competitors.insights.opportunities?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
-                      <div className="border border-orange-800 rounded-lg p-3 bg-orange-950/20">
-                        <p className="text-xs font-semibold text-orange-400 uppercase mb-2">Threats</p>
+                      <div className="border border-[var(--status-orange-border)] rounded-lg p-3 bg-[var(--status-orange-bg)]/20">
+                        <p className="text-xs font-semibold text-[var(--status-orange)] uppercase mb-2">Threats</p>
                         <ul className="space-y-1">{competitors.insights.threats?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
                     </div>
@@ -1058,30 +1058,30 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
               )}
               {aiRecsUpgrade && (
                 <div className="text-center py-10">
-                  <p className="text-yellow-400 font-semibold mb-2">Starter Plan Required</p>
+                  <p className="text-[var(--status-yellow)] font-semibold mb-2">Starter Plan Required</p>
                   <p className="text-[var(--text-secondary)] text-sm mb-4">Upgrade to Starter plan for AI recommendations</p>
                   <a href="https://analysis.seoh.ca" className="bg-teal-600 hover:bg-teal-700 px-6 py-2 rounded-lg text-sm font-medium transition-colors">Upgrade Now</a>
                 </div>
               )}
               {aiRecsError && (
-                <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{aiRecsError}</p>
+                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{aiRecsError}</p>
               )}
               {aiRecs && aiRecs.recommendations && (
                 <div className="space-y-4">
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] mb-3">
-                    Grok AI Recommendations <span className="text-gray-600 normal-case font-normal">— {aiRecs.model}</span>
+                    Grok AI Recommendations <span className="text-[var(--text-muted)] normal-case font-normal">— {aiRecs.model}</span>
                   </h3>
                   {aiRecs.recommendations.map((rec: any, i: number) => (
                     <div key={i} className="border border-[var(--border-secondary)] rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-semibold text-[var(--text-primary)]">{rec.title}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-red-900/50 text-red-500 dark:text-red-400' : rec.impact === 'medium' ? 'bg-yellow-900/50 text-yellow-400' : 'bg-blue-900/50 text-blue-400'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]' : rec.impact === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-blue-bg)] text-[var(--status-blue)]'}`}>
                           {rec.impact}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-300 mb-2">{rec.recommendation}</p>
+                      <p className="text-sm text-[var(--text-secondary)] mb-2">{rec.recommendation}</p>
                       {rec.why_it_matters && (
-                        <p className="text-xs text-teal-400 border-t border-[var(--border-secondary)] pt-2 mt-2">
+                        <p className="text-xs text-[var(--accent)] border-t border-[var(--border-secondary)] pt-2 mt-2">
                           <span className="font-semibold">Why it matters: </span>{rec.why_it_matters}
                         </p>
                       )}
@@ -1100,15 +1100,15 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
 
 // ─── Password Reset Form ──────────────────────────────────────────────────────
 function getPasswordStrength(password: string): { label: string; color: string; width: string } {
-  if (password.length < 8) return { label: "Weak", color: "bg-red-500", width: "w-1/4" };
+  if (password.length < 8) return { label: "Weak", color: "bg-[var(--status-red-bg)]0", width: "w-1/4" };
   let score = 0;
   if (password.length >= 10) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 1) return { label: "Weak", color: "bg-red-500", width: "w-1/4" };
-  if (score === 2) return { label: "Fair", color: "bg-yellow-500", width: "w-1/2" };
-  return { label: "Strong", color: "bg-green-500", width: "w-full" };
+  if (score <= 1) return { label: "Weak", color: "bg-[var(--status-red-bg)]0", width: "w-1/4" };
+  if (score === 2) return { label: "Fair", color: "bg-[var(--status-yellow-bg)]0", width: "w-1/2" };
+  return { label: "Strong", color: "bg-[var(--status-green-bg)]0", width: "w-full" };
 }
 
 function PasswordResetForm({ email, token, onSuccess }: { email: string; token: string; onSuccess: () => void }) {
@@ -1155,14 +1155,14 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
         <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 space-y-4">
           {success ? (
             <div className="text-center py-4">
-              <div className="text-green-400 text-4xl mb-3">✓</div>
-              <p className="text-green-400 font-semibold text-sm">Password set!</p>
+              <div className="text-[var(--status-green)] text-4xl mb-3">✓</div>
+              <p className="text-[var(--status-green)] font-semibold text-sm">Password set!</p>
               <p className="text-[var(--text-secondary)] text-xs mt-1">Redirecting to login…</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{error}</p>
+                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>
               )}
               <div>
                 <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
@@ -1191,7 +1191,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
                     <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                       <div className={`h-1 rounded-full transition-all ${strength.color} ${strength.width}`} />
                     </div>
-                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-green-400" : strength.label === "Fair" ? "text-yellow-400" : "text-red-500 dark:text-red-400"}`}>
+                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-[var(--status-green)]" : strength.label === "Fair" ? "text-[var(--status-yellow)]" : "text-[var(--status-red)] dark:text-[var(--status-red)]"}`}>
                       {strength.label}
                     </p>
                   </div>
@@ -1325,7 +1325,7 @@ export default function Dashboard() {
           </button>
         </div>
         <form onSubmit={login} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 space-y-4">
-          {error && <p className="text-red-500 dark:text-red-400 text-sm bg-red-100 dark:bg-red-950 border border-red-300 dark:border-red-800 rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-red-100 dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>}
           <div>
             <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
             <input type="email" required value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}
@@ -1337,7 +1337,7 @@ export default function Dashboard() {
               className="w-full bg-[var(--bg-card)] border border-[var(--border-secondary)] rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-teal-500" />
           </div>
           <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 rounded-lg py-2.5 font-medium transition-colors">Sign In</button>
-          <p className="text-center text-xs text-[var(--text-muted)]">Don&apos;t have an account? <a href="https://seoh.ca/contact" target="_blank" className="text-teal-400">Contact us</a></p>
+          <p className="text-center text-xs text-[var(--text-muted)]">Don&apos;t have an account? <a href="https://seoh.ca/contact" target="_blank" className="text-[var(--accent)]">Contact us</a></p>
         </form>
       </div>
     </div>
@@ -1418,10 +1418,10 @@ export default function Dashboard() {
         <div className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 mb-6">
           <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">API Keys</h2>
           {newKeyResult && (
-            <div className="bg-green-950 border border-green-800 rounded-lg p-4 mb-4">
-              <p className="text-green-400 text-sm font-semibold mb-2">Key generated — save it now, it won&apos;t be shown again</p>
+            <div className="bg-[var(--status-green-bg)] border border-[var(--status-green-border)] rounded-lg p-4 mb-4">
+              <p className="text-[var(--status-green)] text-sm font-semibold mb-2">Key generated — save it now, it won&apos;t be shown again</p>
               <div className="flex items-center gap-2">
-                <code className="flex-1 bg-black rounded px-3 py-2 text-sm font-mono text-green-300 break-all">{newKeyResult.raw_key}</code>
+                <code className="flex-1 bg-black rounded px-3 py-2 text-sm font-mono text-[var(--status-green)] break-all">{newKeyResult.raw_key}</code>
                 <button onClick={() => copy(newKeyResult.raw_key, 'new')} className="bg-green-800 hover:bg-green-700 px-3 py-2 rounded text-xs">
                   {copied === 'new' ? 'Copied!' : 'Copy'}
                 </button>
@@ -1437,9 +1437,9 @@ export default function Dashboard() {
                 </div>
                 <div className="flex items-center gap-2">
                   <code className="text-xs font-mono text-[var(--text-secondary)] flex-1">{key.key_prefix}••••••••••••••••</code>
-                  <span className="text-xs text-gray-600">Last used: {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}</span>
+                  <span className="text-xs text-[var(--text-muted)]">Last used: {key.last_used_at ? new Date(key.last_used_at).toLocaleDateString() : 'Never'}</span>
                 </div>
-                <div className="mt-2 bg-gray-800 rounded-full h-1">
+                <div className="mt-2 bg-[var(--bg-secondary)] rounded-full h-1">
                   <div className="bg-teal-500 h-1 rounded-full" style={{ width: `${Math.min(100, (key.usage_this_month / key.monthly_limit) * 100)}%` }} />
                 </div>
               </div>
@@ -1479,7 +1479,7 @@ export default function Dashboard() {
           {tierFeatures && (
             <div className="grid grid-cols-2 gap-2 mb-6">
               {Object.entries(tierFeatures).map(([feature, enabled]) => (
-                <div key={feature} className={`flex items-center gap-2 text-sm ${enabled ? 'text-[var(--text-primary)]' : 'text-gray-600'}`}>
+                <div key={feature} className={`flex items-center gap-2 text-sm ${enabled ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}`}>
                   <span>{enabled ? '✓' : '✗'}</span>
                   <span className="capitalize">{feature.replace('_', ' ')}</span>
                 </div>
@@ -1496,8 +1496,8 @@ export default function Dashboard() {
               <PricingCard key={p.tier} {...p} currentTier={agency?.tier || 'free'} onUpgrade={() => handleUpgrade(p.tier)} />
             ))}
           </div>
-          <p className="text-xs text-gray-600 mt-4 text-center">
-            Manage your subscription → <a href="#" onClick={async (e) => { e.preventDefault(); const r = await fetch(`${API_BASE}/billing/portal`, { headers: { Authorization: `Bearer ${token}` } }); const d = await r.json(); if (d.portalUrl) window.open(d.portalUrl, '_blank'); }} className="text-teal-400 hover:underline">Customer Portal</a>
+          <p className="text-xs text-[var(--text-muted)] mt-4 text-center">
+            Manage your subscription → <a href="#" onClick={async (e) => { e.preventDefault(); const r = await fetch(`${API_BASE}/billing/portal`, { headers: { Authorization: `Bearer ${token}` } }); const d = await r.json(); if (d.portalUrl) window.open(d.portalUrl, '_blank'); }} className="text-[var(--accent)] hover:underline">Customer Portal</a>
           </p>
         </div>
       )}
