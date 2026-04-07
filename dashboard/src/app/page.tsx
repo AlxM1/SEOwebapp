@@ -431,7 +431,7 @@ function ScoreRing({ score, max = 100, color = '#14b8a6', size = 80 }: { score: 
   const dash = (pct / 100) * circ;
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--ring-track)" strokeWidth="8" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--ring-track)" strokeWidth="10" />
       <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="8"
         strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
@@ -1388,7 +1388,7 @@ export default function Dashboard() {
           {[
             { label: 'Active Keys', value: keys.filter((k: any) => k.active).length },
             { label: 'Used This Month', value: keys.reduce((s: number, k: any) => s + (k.usage_this_month || 0), 0) },
-            { label: 'Monthly Limit', value: keys.reduce((s: number, k: any) => s + (k.monthly_limit || 0), 0) },
+            { label: 'Monthly Limit', value: keys.reduce((s: number, k: any) => s + (k.monthly_limit || 0), 0) >= 999999 ? 'Unlimited' : keys.reduce((s: number, k: any) => s + (k.monthly_limit || 0), 0) },
           ].map(kpi => (
             <div key={kpi.label} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-4">
               <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-1">{kpi.label}</p>
@@ -1427,7 +1427,7 @@ export default function Dashboard() {
               <div key={key.id} className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-sm">{key.label}</span>
-                  <span className="text-xs text-[var(--text-muted)]">{key.usage_this_month}/{key.monthly_limit} used</span>
+                  <span className="text-xs text-[var(--text-muted)]">{key.usage_this_month}/{key.monthly_limit >= 999999 ? 'Unlimited' : key.monthly_limit} used</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <code className="text-xs font-mono text-[var(--text-secondary)] flex-1">{key.key_prefix}••••••••••••••••</code>
