@@ -545,7 +545,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           </div>
 
           {/* Tab nav */}
-          <div className="flex gap-1 mb-4 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-1">
+          <div className="flex gap-1 mb-4 bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-1 overflow-x-auto scrollbar-hide">
             {(['seo', 'geo', 'aeo', 'keywords', 'social', 'competitors', 'airecs'] as const).map(t => (
               <button key={t} onClick={() => {
                 setTab(t);
@@ -613,10 +613,10 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                 <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)]">Images</h3>
-                    <div className="flex gap-3 text-sm">
+                    <div className="flex flex-wrap gap-2 text-sm">
                       <span>{seo.images.total} total</span>
                       <span className="text-[var(--status-green)]">{seo.images.withAlt} with alt</span>
-                      {seo.images.withoutAlt > 0 && <span className="text-amber-400">{seo.images.withoutAlt} missing alt</span>}
+                      {seo.images.withoutAlt > 0 && <span className="text-[var(--status-yellow)]">{seo.images.withoutAlt} missing alt</span>}
                     </div>
                   </div>
                   <div className="bg-[var(--bg-secondary)] rounded-full h-1.5">
@@ -1374,7 +1374,7 @@ export default function Dashboard() {
       </div>
 
       {/* Nav */}
-      <div className="flex gap-1 mb-6 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-1">
+      <div className="flex gap-1 mb-6 bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-1 overflow-x-auto">
         {([
           ['analyze', 'Analyze'],
           ['keys', 'API Keys'],
