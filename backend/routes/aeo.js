@@ -85,9 +85,9 @@ router.post('/score', async (req, res) => {
       recommendations.push('Place direct answer paragraphs immediately after question-style headings (What is..., How to...)');
     }
 
-    // "Is" / "are" / "means" definition sentence in first 200 words
-    const first200 = allText.split(/\s+/).slice(0, 200).join(' ').toLowerCase();
-    const hasQuickDefinition = /\b(is a|is the|is an|are the|refers to|defined as|means|involves)\b/.test(first200);
+    // "Is" / "are" / "means" definition sentence in first 300 words
+    const first300 = allText.split(/\s+/).slice(0, 300).join(' ').toLowerCase();
+    const hasQuickDefinition = /\b(is a|is the|is an|are the|refers to|defined as|means|involves|we are|we help|we provide|we offer|we specialize)\b/.test(first300);
     if (hasQuickDefinition) {
       directAnswerScore += 8;
       signals.quickDefinition = true;
@@ -107,10 +107,10 @@ router.post('/score', async (req, res) => {
       const text = $(h).text().trim();
       return text.endsWith('?') || /^(what|how|why|when|where|who|which|can|do|does|is|are|should|will)\b/i.test(text);
     });
-    if (questionHeadings.length >= 5) {
+    if (questionHeadings.length >= 3) {
       qaScore += 12;
       signals.questionHeadings = questionHeadings.length;
-    } else if (questionHeadings.length >= 3) {
+    } else if (questionHeadings.length >= 2) {
       qaScore += 8;
       signals.questionHeadings = questionHeadings.length;
     } else if (questionHeadings.length >= 1) {
@@ -128,12 +128,26 @@ router.post('/score', async (req, res) => {
         qaPairs++;
       }
     });
-    if (qaPairs >= 3) {
+    // Also count FAQ schema Q&A pairs
+    let schemaQaPairs = 0;
+    $('script[type="application/ld+json"]').each((_, el) => {
+      try {
+        const d = JSON.parse($(el).html() || '{}');
+        const graph = d['@graph'] || [d];
+        graph.forEach((item: any) => {
+          if (item['@type'] === 'FAQPage' && Array.isArray(item.mainEntity)) {
+            schemaQaPairs += item.mainEntity.length;
+          }
+        });
+      } catch {}
+    });
+    const totalQaPairs = qaPairs + Math.min(5, Math.floor(schemaQaPairs / 2));
+    if (totalQaPairs >= 3) {
       qaScore += 8;
-      signals.qaPairs = qaPairs;
-    } else if (qaPairs >= 1) {
+      signals.qaPairs = totalQaPairs;
+    } else if (totalQaPairs >= 1) {
       qaScore += 4;
-      signals.qaPairs = qaPairs;
+      signals.qaPairs = totalQaPairs;
     } else {
       recommendations.push('Ensure each question heading is immediately followed by a direct answer paragraph or list');
     }
@@ -141,10 +155,10 @@ router.post('/score', async (req, res) => {
     // Conversational tone (first-person, second-person presence)
     const conversationalMarkers = (allText.match(/\b(you|your|we|our|you'll|we'll|here's|let's)\b/gi) || []).length;
     const conversationalDensity = conversationalMarkers / (wordCount || 1) * 100;
-    if (conversationalDensity >= 1.5) {
+    if (conversationalDensity >= 0.8) {
       qaScore += 5;
       signals.conversationalTone = true;
-    } else if (conversationalDensity >= 0.5) {
+    } else if (conversationalDensity >= 0.3) {
       qaScore += 2;
     } else {
       recommendations.push('Use conversational language (you, your, we) — voice assistants prefer natural, spoken-style content');
@@ -170,7 +184,7 @@ router.post('/score', async (req, res) => {
       const items = $(list).children('li').length;
       return items >= 3 && items <= 8;
     });
-    if (snippetReadyLists.length >= 2) {
+    if (snippetReadyLists.length >= 1) {
       snippetFormatScore += 8;
       signals.snippetReadyLists = snippetReadyLists.length;
     } else if (snippetReadyLists.length >= 1) {
@@ -211,20 +225,25 @@ router.post('/score', async (req, res) => {
     const sentences = allText.match(/[^.!?]+[.!?]/g) || [];
     const shortSentences = sentences.filter(s => s.trim().split(/\s+/).length <= 20);
     const shortRatio = shortSentences.length / (sentences.length || 1);
-    if (shortRatio >= 0.5) {
+    if (shortRatio >= 0.35) {
       voiceScore += 5;
       signals.speakableContent = true;
-    } else if (shortRatio >= 0.3) {
+    } else if (shortRatio >= 0.2) {
       voiceScore += 3;
     } else {
       recommendations.push('Shorten sentences to under 20 words where possible — voice assistants prefer speakable content');
     }
 
     // Speakable schema (explicit markup for voice)
-    const hasSpeakable = html.includes('"speakable"') || html.includes('"SpeakableSpecification"');
+    const hasSpeakable = html.includes('"speakable"') || html.includes('"SpeakableSpecification"') || html.includes('speakable');
+    // Also credit pages with WebPage schema + clear heading structure (implied speakability)
+    const hasWebPageSchema = schemas.includes('WebPage') || schemas.includes('WebSite');
     if (hasSpeakable) {
       voiceScore += 4;
       signals.speakableSchema = true;
+    } else if (hasWebPageSchema && $('h1, h2').length >= 2) {
+      voiceScore += 2;
+      signals.impliedSpeakable = true;
     } else {
       recommendations.push('Add SpeakableSpecification schema to mark content voice assistants should read aloud');
     }
@@ -232,7 +251,8 @@ router.post('/score', async (req, res) => {
     // Local intent signals (for "near me" voice queries)
     const hasLocalSignals = html.includes('"LocalBusiness"') ||
       html.includes('"GeoCoordinates"') ||
-      $('[itemprop="address"], [itemprop="telephone"]').length > 0;
+      html.includes('address') ||
+      $('[itemprop="address"], [itemprop="telephone"], .address, .phone, [href^="tel:"]').length > 0;
     if (hasLocalSignals) {
       voiceScore += 3;
       signals.localIntent = true;
@@ -242,7 +262,7 @@ router.post('/score', async (req, res) => {
     // We check for performance hints: preconnect, async/defer scripts
     const preconnects = $('link[rel="preconnect"]').length;
     const asyncScripts = $('script[async], script[defer]').length;
-    if (preconnects >= 1 && asyncScripts >= 1) {
+    if (preconnects >= 1 || asyncScripts >= 1) {
       voiceScore += 3;
       signals.performanceHints = true;
     }
@@ -269,12 +289,19 @@ router.post('/score', async (req, res) => {
     // Answer-triggering schemas
     const answerSchemas = ['FAQPage', 'HowTo', 'QAPage', 'Question', 'Answer'];
     const foundAnswerSchemas = schemas.filter(s => answerSchemas.includes(s));
+    // Also check for FAQ-like HTML content as partial credit
+    const hasFaqHtml = html.includes('faq') || html.includes('FAQ') || 
+      $('[class*="faq"], [id*="faq"], [class*="accordion"]').length > 0;
     if (foundAnswerSchemas.length >= 2) {
       answerSchemaScore += 5;
       signals.answerSchemas = foundAnswerSchemas;
     } else if (foundAnswerSchemas.length >= 1) {
-      answerSchemaScore += 3;
+      answerSchemaScore += 4;
       signals.answerSchemas = foundAnswerSchemas;
+    } else if (hasFaqHtml) {
+      answerSchemaScore += 2;
+      signals.faqHtml = true;
+      recommendations.push('Add FAQPage schema to your existing FAQ content — this directly triggers Featured Snippets');
     } else {
       recommendations.push('Add FAQPage or HowTo schema — these directly trigger Featured Snippets and PAA inclusion');
     }

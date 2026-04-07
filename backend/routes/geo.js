@@ -37,22 +37,26 @@ router.post('/score', async (req, res) => {
 
     // FAQ schema or FAQ-like content
     const hasFaqSchema = html.includes('"FAQPage"') || html.includes('"Question"');
-    const hasFaqHeadings = $('h2, h3').toArray().some(el =>
-      $(el).text().trim().endsWith('?')
-    );
+    const faqHeadingCount = $('h2, h3, h4').toArray().filter(el => {
+      const text = $(el).text().trim();
+      return text.endsWith('?') || /^(what|how|why|when|where|who|which|can|do|does|is|are|should|will)\b/i.test(text);
+    }).length;
     if (hasFaqSchema) { answerScore += 15; signals.faqSchema = true; }
-    else if (hasFaqHeadings) { answerScore += 8; signals.faqHeadings = true; }
+    else if (faqHeadingCount >= 5) { answerScore += 12; signals.faqHeadings = faqHeadingCount; }
+    else if (faqHeadingCount >= 2) { answerScore += 8; signals.faqHeadings = faqHeadingCount; }
+    else if (faqHeadingCount >= 1) { answerScore += 4; signals.faqHeadings = faqHeadingCount; }
     else recommendations.push('Add FAQ section with Q&A format — AI engines love direct answers');
 
     // Definition/explanation patterns ("X is a...", "X refers to...")
-    const bodyText = $('p').first().text().toLowerCase();
-    const hasDefinitionPattern = /\b(is a|is the|refers to|defined as|means that)\b/.test(bodyText);
+    // Check first 8 paragraphs and heading text for definition/service patterns
+    const allParaText = $('p, h1, h2').toArray().slice(0, 8).map(el => $(el).text().toLowerCase()).join(' ');
+    const hasDefinitionPattern = /\b(is a|is the|refers to|defined as|means that|we are|we help|we provide|we offer|we make|we handle|we optimize|seo is|geo is|aeo is|agency|services)\b/.test(allParaText);
     if (hasDefinitionPattern) { answerScore += 8; signals.definitionPattern = true; }
     else recommendations.push('Start content with a clear definition or direct answer to the page topic');
 
     // Lists (AI engines cite structured lists heavily)
     const listCount = $('ul li, ol li').length;
-    if (listCount >= 5) { answerScore += 10; signals.richLists = true; }
+    if (listCount >= 3) { answerScore += 10; signals.richLists = true; }
     else if (listCount > 0) { answerScore += 4; }
     else recommendations.push('Add bullet-point lists — AI engines frequently cite structured lists');
 
@@ -108,7 +112,7 @@ router.post('/score', async (req, res) => {
     const pageHostname = new URL(response.url).hostname;
     const externalLinks = $('a[href^="http"]').toArray()
       .filter(el => !$(el).attr('href')?.includes(pageHostname));
-    if (externalLinks.length >= 3) { authorityScore += 7; signals.hasCitations = true; }
+    if (externalLinks.length >= 2) { authorityScore += 7; signals.hasCitations = true; }
     else recommendations.push('Cite external authoritative sources — AI engines trust content with references');
 
     signals.authorityScore = authorityScore;
@@ -125,7 +129,7 @@ router.post('/score', async (req, res) => {
 
     // Content length (AI engines prefer comprehensive content)
     const wordCount = $('body').text().replace(/\s+/g, ' ').split(' ').length;
-    if (wordCount >= 1500) { structureScore += 7; signals.comprehensiveContent = true; }
+    if (wordCount >= 800) { structureScore += 7; signals.comprehensiveContent = true; }
     else if (wordCount >= 600) { structureScore += 4; }
     else recommendations.push(`Content is short (${wordCount} words) — AI engines prefer 600+ words for citations`);
 
