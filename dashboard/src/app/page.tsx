@@ -436,7 +436,7 @@ function ScoreRing({ score, max = 100, color = '#14b8a6', size = 80 }: { score: 
         strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
         transform={`rotate(-90 ${size/2} ${size/2})`} />
       <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle"
-        fill="white" fontSize={size > 70 ? "18" : "13"} fontWeight="bold">{score}</text>
+        fill="var(--text-primary)" fontSize={size > 70 ? "18" : "13"} fontWeight="bold">{score}</text>
     </svg>
   );
 }
