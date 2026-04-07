@@ -20,7 +20,7 @@ router.post('/score', async (req, res) => {
     // Step 1: Crawl the page to find social media links
     const pageRes = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; SEOhBot/1.0)' },
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(15000),
     });
     const html = await pageRes.text();
     const $ = cheerio.load(html);
@@ -105,6 +105,7 @@ Return ONLY valid JSON:
     const grokRes = await fetch('https://api.x.ai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${GROK_API_KEY}` },
+      signal: AbortSignal.timeout(25000),
       body: JSON.stringify({
         model: GROK_MODEL,
         messages: [

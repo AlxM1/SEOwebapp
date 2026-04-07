@@ -8,7 +8,7 @@ const TIER_ORDER = ['free', 'starter', 'pro', 'agency'];
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Analysis:   { bg: 'bg-[var(--status-teal-bg)]',   text: 'text-[var(--accent)]',   border: 'border-[var(--accent)]' },
   Monitoring: { bg: 'bg-[var(--status-orange-bg)]', text: 'text-[var(--status-orange)]', border: 'border-[var(--status-orange-border)]' },
-  Admin:      { bg: 'bg-[var(--status-red-bg)]',    text: 'text-[var(--status-red)] dark:text-[var(--status-red)]',    border: 'border-[var(--status-red-border)]' },
+  Admin:      { bg: 'bg-[var(--status-red-bg)]',    text: 'text-[var(--status-red)]',    border: 'border-[var(--status-red-border)]' },
   Billing:    { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-600', border: 'border-purple-200' },
   Auth:       { bg: 'bg-[var(--status-blue-bg)]',   text: 'text-[var(--status-blue)]',   border: 'border-[var(--status-blue-border)]' },
 };
@@ -361,7 +361,7 @@ function FeaturesSection({ token, userTier, apiKey }: { token: string; userTier:
         </div>
       )}
       {error && (
-        <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>
+        <p className="text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>
       )}
 
       {/* Grid */}
@@ -483,6 +483,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
       setSeo(d1); setGeo(d2); setKw(d3);
       if (r4?.ok) setAeo(d4);
       if (r5?.ok) setSocial(d5);
+      else if (r5 && !r5.ok) setSocialError(d5?.error || 'Social analysis failed — try again');
       if (r6?.ok) setAiRecs(d6);
       setTab('seo');
     } catch (e: any) { setError(e.message || 'Analysis failed'); }
@@ -505,7 +506,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {loading ? 'Analyzing…' : 'Run Analysis'}
         </button>
       </div>
-      {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>}
+      {error && <p className="text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2 mb-4">{error}</p>}
       {loading && (
         <div className="flex items-center gap-3 py-10 justify-center text-[var(--text-secondary)] text-sm">
           <div className="w-4 h-4 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -1068,7 +1069,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
           {tab === 'social' && (
             <div className="bg-[var(--bg-card)] border border-[var(--border-primary)] rounded-xl p-5">
               <h3 className="text-sm font-semibold uppercase tracking-wider text-[var(--text-secondary)] mb-4">Social Media Presence</h3>
-              {!social && !socialLoading && (
+              {!social && !socialLoading && !socialError && (
                 <p className="text-[var(--text-muted)] text-sm">Social media analysis runs automatically with the main analysis.</p>
               )}
               {socialLoading && (
@@ -1077,7 +1078,12 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   Analyzing social presence...
                 </div>
               )}
-              {socialError && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm">{socialError}</p>}
+              {socialError && (
+                <div className="flex items-center gap-2 p-3 bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded-lg text-sm text-[var(--status-red)]">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  {socialError}
+                </div>
+              )}
               {social && (
                 <div className="space-y-4">
                   {/* Overall score */}
@@ -1095,10 +1101,10 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                       <div key={platform} className={`border rounded-lg p-3 ${data.found ? 'border-[var(--accent)] bg-teal-50/80 dark:bg-[var(--status-teal-bg)]/20' : 'border-[var(--border-primary)] bg-[var(--bg-secondary)]'}`}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium capitalize">{platform === 'twitter' ? 'X (Twitter)' : platform}</span>
-                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-[var(--status-green)]' : data.score >= 30 ? 'text-[var(--status-yellow)]' : 'text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>{data.score}/100</span>
+                          <span className={`text-xs font-mono ${data.score >= 60 ? 'text-[var(--status-green)]' : data.score >= 30 ? 'text-[var(--status-yellow)]' : 'text-[var(--status-red)]'}`}>{data.score}/100</span>
                         </div>
                         <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden mb-1">
-                          <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-[var(--status-green-bg)]0' : data.score >= 30 ? 'bg-[var(--status-yellow-bg)]0' : 'bg-[var(--status-red-bg)]0'}`} style={{width: `${data.score}%`}} />
+                          <div className={`h-1 rounded-full ${data.score >= 60 ? 'bg-[var(--status-green)]' : data.score >= 30 ? 'bg-[var(--status-yellow)]' : 'bg-[var(--status-red)]'}`} style={{width: `${data.score}%`}} />
                         </div>
                         <p className="text-xs text-[var(--text-muted)]">{data.notes}</p>
                         {data.url && <a href={data.url} target="_blank" rel="noopener" className="text-xs text-[var(--accent)] hover:underline mt-1 block truncate">{data.url}</a>}
@@ -1111,9 +1117,9 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     <div className="border border-[var(--border-primary)] rounded-lg p-3 mt-3">
                       <p className="text-xs font-semibold text-[var(--text-secondary)] uppercase mb-2">Social Meta Tags</p>
                       <div className="flex gap-3">
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
-                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.openGraph ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)]'}`}>OG Tags {social.socialMetaTags.openGraph ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.twitterCards ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)]'}`}>Twitter Cards {social.socialMetaTags.twitterCards ? '\u2713' : '\u2717'}</span>
+                        <span className={`text-xs px-2 py-1 rounded ${social.socialMetaTags.schemaOrg ? 'bg-[var(--status-green-bg)] text-[var(--status-green)]' : 'bg-[var(--status-red-bg)] text-[var(--status-red)]'}`}>Schema.org {social.socialMetaTags.schemaOrg ? '\u2713' : '\u2717'}</span>
                       </div>
                     </div>
                   )}
@@ -1126,7 +1132,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                         {social.recommendations.map((rec: any, i: number) => (
                           <div key={i} className="border border-[var(--border-primary)] rounded-lg p-3">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]' : rec.priority === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-green-bg)] text-[var(--status-green)]'}`}>{rec.priority}</span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${rec.priority === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)]' : rec.priority === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-green-bg)] text-[var(--status-green)]'}`}>{rec.priority}</span>
                               <span className="text-xs font-medium capitalize">{rec.platform}</span>
                             </div>
                             <p className="text-xs text-[var(--text-muted)]">{rec.recommendation}</p>
@@ -1179,7 +1185,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                   <p className="text-xs text-[var(--text-muted)]">Scoring each competitor across SEO, GEO, and AEO</p>
                 </div>
               )}
-              {competitorsError && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm">{competitorsError}</p>}
+              {competitorsError && <p className="text-[var(--status-red)] text-sm">{competitorsError}</p>}
               {competitors && (
                 <div className="space-y-4">
                   {/* Business info */}
@@ -1216,9 +1222,9 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                               <p className="font-medium">{c.name}</p>
                               <a href={c.url} target="_blank" rel="noopener" className="text-[var(--accent)] hover:underline truncate block max-w-[200px]">{c.url?.replace(/https?:\/\//, '')}</a>
                             </td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.seo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.geo?.score ?? 'N/A'}</span></td>
-                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-[var(--status-red)] dark:text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.seo?.score || 0) > (competitors.yourScores?.seo || 0) ? 'text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.seo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.geo?.score || 0) > (competitors.yourScores?.geo || 0) ? 'text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.geo?.score ?? 'N/A'}</span></td>
+                            <td className="text-center py-2"><span className={`font-mono ${(c.aeo?.score || 0) > (competitors.yourScores?.aeo || 0) ? 'text-[var(--status-red)]' : 'text-[var(--status-green)]'}`}>{c.aeo?.score ?? 'N/A'}</span></td>
                           </tr>
                         ))}
                       </tbody>
@@ -1233,7 +1239,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                         <ul className="space-y-1">{competitors.insights.strengths?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
                       <div className="border border-[var(--status-red-border)] rounded-lg p-3 bg-[var(--status-red-bg)]/20">
-                        <p className="text-xs font-semibold text-[var(--status-red)] dark:text-[var(--status-red)] uppercase mb-2">Weaknesses</p>
+                        <p className="text-xs font-semibold text-[var(--status-red)] uppercase mb-2">Weaknesses</p>
                         <ul className="space-y-1">{competitors.insights.weaknesses?.map((s: string, i: number) => <li key={i} className="text-xs text-[var(--text-muted)]">{s}</li>)}</ul>
                       </div>
                       <div className="border border-[var(--status-blue-border)] rounded-lg p-3 bg-[var(--status-blue-bg)]/20">
@@ -1271,7 +1277,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                 </div>
               )}
               {aiRecsError && (
-                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{aiRecsError}</p>
+                <p className="text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{aiRecsError}</p>
               )}
               {aiRecs && aiRecs.recommendations && (
                 <div className="space-y-4">
@@ -1282,7 +1288,7 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
                     <div key={i} className="border border-[var(--border-secondary)] rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <span className="text-sm font-semibold text-[var(--text-primary)]">{rec.title}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)] dark:text-[var(--status-red)]' : rec.impact === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-blue-bg)] text-[var(--status-blue)]'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded font-medium ${rec.impact === 'high' ? 'bg-[var(--status-red-bg)] text-[var(--status-red)]' : rec.impact === 'medium' ? 'bg-[var(--status-yellow-bg)] text-[var(--status-yellow)]' : 'bg-[var(--status-blue-bg)] text-[var(--status-blue)]'}`}>
                           {rec.impact}
                         </span>
                       </div>
@@ -1307,15 +1313,15 @@ function AnalyzeSection({ token, userTier = "free" }: { token: string; userTier?
 
 // ─── Password Reset Form ──────────────────────────────────────────────────────
 function getPasswordStrength(password: string): { label: string; color: string; width: string } {
-  if (password.length < 8) return { label: "Weak", color: "bg-[var(--status-red-bg)]0", width: "w-1/4" };
+  if (password.length < 8) return { label: "Weak", color: "bg-[var(--status-red)]", width: "w-1/4" };
   let score = 0;
   if (password.length >= 10) score++;
   if (/[A-Z]/.test(password)) score++;
   if (/[0-9]/.test(password)) score++;
   if (/[^A-Za-z0-9]/.test(password)) score++;
-  if (score <= 1) return { label: "Weak", color: "bg-[var(--status-red-bg)]0", width: "w-1/4" };
-  if (score === 2) return { label: "Fair", color: "bg-[var(--status-yellow-bg)]0", width: "w-1/2" };
-  return { label: "Strong", color: "bg-[var(--status-green-bg)]0", width: "w-full" };
+  if (score <= 1) return { label: "Weak", color: "bg-[var(--status-red)]", width: "w-1/4" };
+  if (score === 2) return { label: "Fair", color: "bg-[var(--status-yellow)]", width: "w-1/2" };
+  return { label: "Strong", color: "bg-[var(--status-green)]", width: "w-full" };
 }
 
 function PasswordResetForm({ email, token, onSuccess }: { email: string; token: string; onSuccess: () => void }) {
@@ -1369,7 +1375,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>
+                <p className="text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>
               )}
               <div>
                 <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
@@ -1398,7 +1404,7 @@ function PasswordResetForm({ email, token, onSuccess }: { email: string; token: 
                     <div className="h-1 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
                       <div className={`h-1 rounded-full transition-all ${strength.color} ${strength.width}`} />
                     </div>
-                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-[var(--status-green)]" : strength.label === "Fair" ? "text-[var(--status-yellow)]" : "text-[var(--status-red)] dark:text-[var(--status-red)]"}`}>
+                    <p className={`text-xs mt-1 ${strength.label === "Strong" ? "text-[var(--status-green)]" : strength.label === "Fair" ? "text-[var(--status-yellow)]" : "text-[var(--status-red)]"}`}>
                       {strength.label}
                     </p>
                   </div>
@@ -1532,7 +1538,7 @@ export default function Dashboard() {
           </button>
         </div>
         <form onSubmit={login} className="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-6 space-y-4">
-          {error && <p className="text-[var(--status-red)] dark:text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-[var(--status-red)] text-sm bg-[var(--status-red-bg)] dark:bg-[var(--status-red-bg)] border border-[var(--status-red-border)] rounded px-3 py-2">{error}</p>}
           <div>
             <label className="text-xs text-[var(--text-secondary)] block mb-1">Email</label>
             <input type="email" required value={loginForm.email} onChange={e => setLoginForm({...loginForm, email: e.target.value})}
